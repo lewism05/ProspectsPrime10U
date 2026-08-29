@@ -1,4 +1,6 @@
 {
-  "note": "Slugs of players who have a team photo in assets/players/. Coach > Manage > Team Photos > Download Photo Pack regenerates this file for you.",
-  "players": []
+  "note": "Slugs of players who have a team photo in assets/players/.",
+  "players": [
+    "origin-check"
+  ]
 }
