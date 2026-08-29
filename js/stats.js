@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — STATS ENGINE
+   PROSPECTS PRIME 10U — STATS ENGINE
    Extracts stat lines from parsed rows, assembles player objects, assigns
    tiers, and computes team aggregates and percentile context.
    ========================================================================== */
@@ -54,6 +54,7 @@ P10.Stats = (function () {
     var denom = pa || ab || 0;
 
     return {
+      gp: g('gp') || 0,
       pa: pa || 0,
       ab: ab || 0,
       h: hits || 0,

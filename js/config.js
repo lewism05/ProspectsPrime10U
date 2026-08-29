@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — CONFIG
+   PROSPECTS PRIME 10U — CONFIG
    Roster, schedule, benchmarks. Edit this file to change team data.
    Everything else reads from here.
    ========================================================================== */
@@ -8,9 +8,10 @@ window.P10 = window.P10 || {};
 P10.CONFIG = {
 
   team: {
-    name: 'Prospects',
+    name: 'Prospects Prime',
+    shortName: 'Prospects',
     ageGroup: '10U',
-    fullName: 'Prospects 10U Baseball',
+    fullName: 'Prospects Prime 10U Baseball',
     season: '2026',
     homeField: 'Phillips Park',
     /* Used for the weather forecast on the schedule page.

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — SCHEDULE + WEATHER
+   PROSPECTS PRIME 10U — SCHEDULE + WEATHER
    Game list handling, next-game logic, and Open-Meteo forecasts.
    Open-Meteo is free and needs no API key.
    ========================================================================== */

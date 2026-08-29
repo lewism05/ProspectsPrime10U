@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — CHARTS
+   PROSPECTS PRIME 10U — CHARTS
    Thin Chart.js wrappers with a shared dark theme. All charts destroy and
    rebuild on re-render so the stat-window toggle stays in sync.
    ========================================================================== */

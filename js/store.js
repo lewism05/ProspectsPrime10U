@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — STORE
+   PROSPECTS PRIME 10U — STORE
    Single source of truth for app state. Handles localStorage persistence,
    loading the published data/team.json, and export/import.
    ========================================================================== */
@@ -224,7 +224,7 @@ P10.Store = (function () {
   }
 
   function importBundle(json) {
-    if (!json || !json.data) throw new Error('Not a valid Prospects 10U export file.');
+    if (!json || !json.data) throw new Error('Not a valid Prospects Prime 10U export file.');
     state.data = json.data;
     state.meta = json.meta || { updatedAt: new Date().toISOString(), source: 'import' };
     if (json.lineups) { state.lineups = json.lineups; saveLineups(); }

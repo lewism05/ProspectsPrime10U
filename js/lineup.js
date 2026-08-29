@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — LINEUP ENGINE
+   PROSPECTS PRIME 10U — LINEUP ENGINE
    Scores every player against every batting-order slot, builds a suggested
    card, and explains WHY each name sits where it sits.
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — APP
+   PROSPECTS PRIME 10U — APP
    Boot, routing, event delegation. Everything the user touches lands here.
    ========================================================================== */
 (function () {

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — CSV PARSER
+   PROSPECTS PRIME 10U — CSV PARSER
    Handles GameChanger exports, including the two-row header format where
    row 1 is a section band (Batting / Pitching / Fielding / Catching) and
    row 2 holds the actual column names.
@@ -135,6 +135,7 @@ P10.CSV = (function () {
     obp:  ['obp', 'on base', 'on-base', 'on base %', 'on-base %', 'obp%'],
     slg:  ['slg', 'slugging', 'slg%', 'slugging %'],
     ops:  ['ops'],
+    gp:   ['gp', 'g', 'games', 'games played'],
     pa:   ['pa', 'plate appearances', 'plate app'],
     ab:   ['ab', 'at bats', 'at-bats'],
     hits: ['h', 'hits'],

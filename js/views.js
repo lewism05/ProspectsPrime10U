@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — VIEWS
+   PROSPECTS PRIME 10U — VIEWS
    Every render function. Each takes the store state and writes HTML into
    its section container. No framework, no build step - just strings.
    ========================================================================== */

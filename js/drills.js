@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — DRILL LIBRARY
+   PROSPECTS PRIME 10U — DRILL LIBRARY
    Age-appropriate drills indexed by the weakness they fix.
    Sourced from USA Baseball / Little League University, Driveline, The
    Hitting Vault, ABCA Coaches' Corner, MOJO Sports and common travel-ball

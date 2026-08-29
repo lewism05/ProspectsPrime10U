@@ -1,6 +1,6 @@
-# Prospects 10U Baseball
+# Prospects Prime 10U Baseball
 
-Stat hub for the Prospects 10U travel team. Static site - no build step, no npm,
+Stat hub for the Prospects Prime 10U travel team. Static site - no build step, no npm,
 no server. Drag the folder onto Netlify and it runs.
 
 ---

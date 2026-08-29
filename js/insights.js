@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — INSIGHTS
+   PROSPECTS PRIME 10U — INSIGHTS
    Weakness detection, achievement badges, team practice focus.
    Every threshold traces back to CONFIG.bench so it stays 10U-calibrated.
    ========================================================================== */

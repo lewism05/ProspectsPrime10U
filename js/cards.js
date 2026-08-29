@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PROSPECTS 10U — BASEBALL CARD
+   PROSPECTS PRIME 10U — TRADING CARD
    Front is the portrait, back is the full stat line. One spin on reveal,
    then flip to read the back, the way a real card works.
 
@@ -83,61 +83,56 @@ P10.Cards = (function () {
 
   /* ================= card content ================= */
 
-  function frontStats(p) {
-    var b = p.bat || {};
-    if (b.ops > 0 || b.pa > 0) {
-      return [
-        [S.rate(b.avg), 'AVG'],
-        [S.rate(b.obp), 'OBP'],
-        [S.rate(b.ops), 'OPS'],
-        [b.qab != null && b.qab > 0 ? Math.round(b.qab * 100) + '%' : '—', 'QAB']
-      ];
-    }
-    if (p.pit && p.pit.ip > 0) {
-      return [
-        [S.ipText(p.pit.ip), 'IP'],
-        [S.fixed(p.pit.era, 2), 'ERA'],
-        [p.pit.strike ? Math.round(p.pit.strike * 100) + '%' : '—', 'STR'],
-        [String(p.pit.k), 'K']
-      ];
-    }
-    return [['—', 'AVG'], ['—', 'OBP'], ['—', 'OPS'], ['—', 'QAB']];
+  /* Split a name the way a card does: first line small, surname large.
+     "Manuel Cruz Jr." reads as MANUEL / CRUZ JR. */
+  function splitName(full) {
+    var parts = String(full).trim().split(/\s+/);
+    if (parts.length < 2) return { first: '', last: full };
+    var first = parts[0];
+    var last = parts.slice(1).join(' ');
+    return { first: first, last: last };
   }
 
   function renderFront(p) {
     var photo = getPhoto(p.name);
-    var num = (p.num !== null && p.num !== undefined) ? p.num : '–';
-    var stats = frontStats(p);
-    var tierCls = p.hasData && p.bat && p.bat.ops > 0 ? 'tier-' + p.tier : '';
+    var num = (p.num !== null && p.num !== undefined) ? p.num : '';
+    var nm = splitName(p.name);
+    var pos = p.position || (p.isPitcher ? 'P' : '');
+    var tierChip = (p.hasData && p.bat && p.bat.ops > 0)
+      ? '<span class="bbf-chip t' + p.tier + '">' + esc(S.tierName(p.tier)) + '</span>'
+      : '';
 
     return '' +
       '<div class="bbface bbfront">' +
-        '<img class="bbfront-mark" src="assets/mark.png" alt="">' +
-        '<div class="bbfoil"></div>' +
-        '<div class="bbf-top">' +
-          '<span class="bbf-team">Prospects ' + esc(C.team.ageGroup) + '</span>' +
-          '<span class="bbf-year">' + esc(C.team.season) + '</span>' +
-        '</div>' +
-        '<div class="bbf-photo" id="bbPhotoBox">' +
+        '<div class="bbf-window">' +
+
           (photo
-            ? '<img src="' + photo + '" alt="' + esc(p.name) + '">'
+            ? '<img class="bbf-img" src="' + photo + '" alt="' + esc(p.name) + '">'
             : '<div class="bbf-empty" id="bbEmpty">' +
-                '<div class="bbf-empty-num">' + esc(num) + '</div>' +
-                '<div class="bbf-empty-cta">＋ Add a photo</div>' +
+                '<div class="bbf-empty-num">' + esc(num || '—') + '</div>' +
+                '<div class="bbf-empty-cta">Add a photo</div>' +
               '</div>') +
-        '</div>' +
-        '<div class="bbf-plate">' +
-          '<span class="bbf-num">' + esc(num) + '</span>' +
-          '<span class="bbf-id">' +
-            '<div class="bbf-name">' + esc(p.name) + '</div>' +
-            '<div class="bbf-pos">' + esc(p.role || 'Roster') + '</div>' +
-          '</span>' +
-          (tierCls ? '<span class="bbf-tier tier-badge ' + tierCls + '">' + esc(S.tierName(p.tier)) + '</span>' : '') +
-        '</div>' +
-        '<div class="bbf-line">' +
-          stats.map(function (s) {
-            return '<div><div class="v">' + esc(s[0]) + '</div><div class="l">' + esc(s[1]) + '</div></div>';
-          }).join('') +
+
+          '<div class="bbf-top">' +
+            '<img class="bbf-brand" src="assets/mark.png" alt="">' +
+            '<span class="bbf-wordmark">' + esc(C.team.name) + '</span>' +
+          '</div>' +
+
+          '<div class="bbf-rail">' +
+            (num !== '' ? '<span class="bbf-chip num">' + esc(num) + '</span>' : '') +
+            tierChip +
+          '</div>' +
+
+          '<div class="bbf-bottom">' +
+            '<span class="bbf-roundel"><img src="assets/mark.png" alt=""></span>' +
+            '<span class="bbf-nameblock">' +
+              (nm.first ? '<div class="bbf-first">' + esc(nm.first) + '</div>' : '') +
+              '<div class="bbf-last">' + esc(nm.last) + '</div>' +
+            '</span>' +
+            (pos ? '<span class="bbf-posbug">' + esc(pos) + '</span>' : '') +
+          '</div>' +
+
+          '<div class="bbfoil"></div>' +
         '</div>' +
       '</div>';
   }
@@ -235,16 +230,43 @@ P10.Cards = (function () {
         }).join('') + '</div>';
     }
 
+    var nm = splitName(p.name);
+
+    /* Only print vitals we actually know. A row of em dashes for Bats and
+       Throws looks like the card failed to load; better to show the number,
+       the tier and the games he has actually played. */
+    var vitals = [];
+    if (p.bats)   vitals.push(['Bats', p.bats]);
+    if (p.throws) vitals.push(['Throws', p.throws]);
+    if (p.position) {
+      vitals.push(['Pos', p.secondary ? p.position + '/' + p.secondary : p.position]);
+    }
+    if (p.num !== null && p.num !== undefined) vitals.push(['No.', '#' + p.num]);
+    if (p.hasData && p.bat && p.bat.ops > 0) vitals.push(['Tier', S.tierName(p.tier)]);
+    var games = (b && b.gp) || 0;
+    if (games) vitals.push(['Games', games]);
+    if (pit && pit.ip > 0) vitals.push(['IP', S.ipText(pit.ip)]);
+    vitals = vitals.slice(0, 4);
+
     return '' +
       '<div class="bbface bbback">' +
-        '<div class="bbb-head">' +
-          '<span class="bbb-num">#' + esc(num) + '</span>' +
-          '<span class="bbb-name">' + esc(p.name) + '</span>' +
-          '<span class="bbb-pos">' + esc(p.position || '') + '</span>' +
+        '<div class="bbb-top">' +
+          '<span class="bbb-cardno">' + esc(num) + '</span>' +
+          '<span class="bbb-names">' +
+            (nm.first ? '<div class="bbb-first">' + esc(nm.first) + '</div>' : '') +
+            '<div class="bbb-last">' + esc(nm.last) + '</div>' +
+          '</span>' +
+          (p.position ? '<span class="bbb-posbug">' + esc(p.position) + '</span>' : '') +
+        '</div>' +
+        '<div class="bbb-vitals">' +
+          vitals.map(function (v) {
+            return '<span class="bbb-vital"><div class="k">' + esc(v[0]) + '</div>' +
+                   '<div class="v">' + esc(v[1]) + '</div></span>';
+          }).join('') +
         '</div>' +
         '<div class="bbb-scroll">' + html + '</div>' +
         '<div class="bbb-foot">' +
-          '<span>Prospects ' + esc(C.team.ageGroup) + '</span>' +
+          '<span>' + esc(C.team.name) + ' ' + esc(C.team.ageGroup) + '</span>' +
           '<span>' + esc(C.team.season) + ' Season</span>' +
         '</div>' +
       '</div>';
