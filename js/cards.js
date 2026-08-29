@@ -63,6 +63,7 @@ P10.Cards = (function () {
       .then(function (j) {
         teamPhotos = {};
         ((j && j.players) || []).forEach(function (sl) { teamPhotos[sl] = true; });
+        reconcileShared();
         return teamPhotos;
       })
       .catch(function () { teamPhotos = {}; return teamPhotos; });
@@ -124,7 +125,34 @@ P10.Cards = (function () {
      code is remembered once so nobody has to type it every time.
      ================================================================== */
   var CODE_KEY = C.ns + '_teamcode';
+  var SHARED_KEY = C.ns + '_shared_';
   var uploadAvailable = null;   // null = not probed yet
+
+  function markShared(name) {
+    try { localStorage.setItem(SHARED_KEY + slug(name), '1'); } catch (e) {}
+  }
+  function wasShared(name) {
+    try { return localStorage.getItem(SHARED_KEY + slug(name)) === '1'; } catch (e) { return false; }
+  }
+  function clearShared(name) {
+    try { localStorage.removeItem(SHARED_KEY + slug(name)); } catch (e) {}
+  }
+
+  /* Once a shared photo is actually live in the repo, the local copy is a
+     stale duplicate - and worse, it would keep overriding a later
+     replacement by somebody else. Drop it as soon as the manifest confirms
+     the team photo landed. Self-healing, no housekeeping for anyone. */
+  function reconcileShared() {
+    if (!teamPhotos) return;
+    Object.keys(teamPhotos).forEach(function (sl) {
+      try {
+        if (localStorage.getItem(SHARED_KEY + sl) === '1') {
+          localStorage.removeItem(PHOTO_PREFIX + sl);
+          localStorage.removeItem(SHARED_KEY + sl);
+        }
+      } catch (e) {}
+    });
+  }
 
   function getCode() {
     try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; }
@@ -404,6 +432,7 @@ P10.Cards = (function () {
             ? '<button class="btn btn-primary hidden" id="bbShare">Share With Team</button>' +
               '<button class="btn btn-ghost" id="bbRemove">Remove</button>'
             : '') +
+          '<span class="share-state hidden" id="bbState"></span>' +
         '</div>' +
         '<div class="card-msg hidden" id="bbMsg"></div>' +
         '<div class="card-err hidden" id="bbErr"></div>' +
@@ -505,48 +534,105 @@ P10.Cards = (function () {
       msgEl.innerHTML = text;
     }
 
-    if (shareBtn) {
-      probeUpload().then(function (st) {
-        if (st.configured) {
-          shareBtn.classList.remove('hidden');
-        } else if (st.deployed && st.missing && st.missing.length) {
-          /* Deployed but not switched on. Say so, and say exactly what is
-             missing - the coach is the only person who can fix it and they
-             should not have to guess. */
-          say('<strong>Sharing is not switched on yet.</strong> This photo is saved on ' +
-              'this device only. Coach: set ' + esc(st.missing.join(', ')) +
-              ' in Netlify and redeploy.', 'warn');
-        }
-      });
+    var stateEl = host.querySelector('#bbState');
 
-      shareBtn.addEventListener('click', function () {
-        var data = getPhoto(p.name);
-        if (!data) return;
+    function setState(text, kind) {
+      if (!stateEl) return;
+      if (!text) { stateEl.classList.add('hidden'); return; }
+      stateEl.className = 'share-state ' + (kind || '');
+      stateEl.textContent = text;
+    }
 
-        var code = getCode();
-        if (!code) {
+    /* ------------------------------------------------------------------
+       Sharing runs automatically when a photo is added. A separate button
+       meant a parent could add a photo, see it on their own phone, and
+       reasonably assume the team had it - which is exactly the confusion
+       this whole feature exists to remove.
+
+       The code prompt is kept on first use. It gates the upload, and it is
+       also the one moment where somebody is told plainly that this photo
+       is about to go on every family's phone. Worth one interruption,
+       once. After that it is remembered and uploads are silent.
+       ------------------------------------------------------------------ */
+    function shareWithTeam(opts) {
+      opts = opts || {};
+      var data = getPhoto(p.name);
+      if (!data) return Promise.resolve(false);
+
+      var code = getCode();
+      if (!code) {
+        if (opts.silentIfNoCode) {
+          // No code yet and we are mid-upload: ask, but frame it as what
+          // it is rather than as an error.
+          code = window.prompt(
+            'Team code\n\nAdding ' + p.name + '\'s photo for the whole team - every ' +
+            'family, every phone. Your coach has the code.\n\n' +
+            'Leave this blank to keep the photo on this device only.');
+        } else {
           code = window.prompt(
             'Team code\n\nThis puts ' + p.name + '\'s photo on the card for every ' +
             'family, on every device. Your coach has the code.');
-          if (!code) return;
-          code = code.trim();
         }
+        if (!code || !code.trim()) {
+          setState('Saved on this device only', 'warn');
+          if (shareBtn) shareBtn.classList.remove('hidden');
+          return Promise.resolve(false);
+        }
+        code = code.trim();
+      }
 
-        shareBtn.disabled = true;
-        shareBtn.textContent = 'Sending…';
-        say('Uploading…', 'info');
+      if (shareBtn) { shareBtn.disabled = true; shareBtn.textContent = 'Sending…'; }
+      setState('Sharing with the team…', 'busy');
 
-        uploadToTeam(p.name, data, code).then(function (res) {
-          setCode(code);
-          say('<strong>Done.</strong> ' + esc(res.message), 'good');
-          shareBtn.textContent = 'Shared';
-        }).catch(function (err) {
-          // A wrong code should not stay remembered.
-          if (/code is not right/i.test(err.message)) setCode('');
+      return uploadToTeam(p.name, data, code).then(function (res) {
+        setCode(code);
+        markShared(p.name);
+        setState('Shared with the team', 'good');
+        say('<strong>Done.</strong> ' + esc(res.message), 'good');
+        if (shareBtn) shareBtn.classList.add('hidden');
+        return true;
+      }).catch(function (err) {
+        if (/code is not right/i.test(err.message)) setCode('');
+        setState('Saved on this device only', 'warn');
+        say(esc(err.message) + ' The photo is still saved here.', 'bad');
+        if (shareBtn) {
           shareBtn.disabled = false;
-          shareBtn.textContent = 'Share With Team';
-          say(esc(err.message), 'bad');
-        });
+          shareBtn.textContent = 'Try Sharing Again';
+          shareBtn.classList.remove('hidden');
+        }
+        return false;
+      });
+    }
+
+    /* Show the current sharing state on open, so a photo that never made it
+       to the team does not sit there looking finished. */
+    if (getPhoto(p.name)) {
+      probeUpload().then(function (st) {
+        if (!st.configured) {
+          if (st.deployed && st.missing && st.missing.length) {
+            say('<strong>Sharing is not switched on yet.</strong> This photo is saved on ' +
+                'this device only. Coach: set ' + esc(st.missing.join(', ')) +
+                ' in Netlify and redeploy.', 'warn');
+          }
+          setState('Saved on this device only', 'warn');
+          return;
+        }
+        if (wasShared(p.name)) setState('Shared with the team', 'good');
+        else {
+          setState('Saved on this device only', 'warn');
+          if (shareBtn) shareBtn.classList.remove('hidden');
+        }
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function () { shareWithTeam(); });
+    }
+
+    /* A freshly added photo shares itself. */
+    if (opts.autoShare && getPhoto(p.name) && !wasShared(p.name)) {
+      probeUpload().then(function (st) {
+        if (st.configured) shareWithTeam({ silentIfNoCode: true });
       });
     }
 
@@ -561,7 +647,10 @@ P10.Cards = (function () {
           showErr('Not enough space to save that photo. Remove another player\'s photo and try again.');
           return;
         }
-        mount(host, p, all, { spin: false });
+        clearShared(p.name);
+        // Re-render so the new photo is on screen immediately, then push it
+        // to the team from the fresh card.
+        mount(host, p, all, { spin: false, autoShare: true });
       }).catch(function (e) {
         showErr(e.message || 'That photo could not be added.');
       });
@@ -573,6 +662,9 @@ P10.Cards = (function () {
     getPhoto: getPhoto,
     getCode: getCode,
     setCode: setCode,
+    wasShared: wasShared,
+    markShared: markShared,
+    clearShared: clearShared,
     probeUpload: probeUpload,
     uploadToTeam: uploadToTeam,
     teamPhotoUrl: teamPhotoUrl,

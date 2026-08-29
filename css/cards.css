@@ -512,3 +512,39 @@ table.bbb-tbl tr:last-child td { border-bottom: none; }
   .bbf-last { font-size: 27px; }
   .bbf-wordmark { font-size: 17px; }
 }
+
+/* Sharing status under the card - reads at a glance without a click. */
+.share-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.share-state::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.share-state.good {
+  color: var(--good);
+  border-color: rgba(61,220,145,.35);
+  background: var(--good-bg);
+}
+.share-state.warn {
+  color: var(--warn);
+  border-color: rgba(255,194,75,.35);
+  background: var(--warn-bg);
+}
+.share-state.busy { color: var(--chrome-dim); }
+.share-state.busy::before { animation: pulseDot 1.1s ease-in-out infinite; }

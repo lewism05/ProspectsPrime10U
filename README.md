@@ -129,9 +129,18 @@ a short scouting line generated from what the numbers actually say.
 **Photos.** Anyone can add a photo to a player's card, and anyone can push it
 up so the whole team sees it.
 
-Tap the card, pick a photo. It saves on that device straight away. Then
-**Share With Team** puts it on the card for every family, on every phone. It
-asks for the team code the first time and remembers it after that.
+Tap the card, pick a photo. That is the whole thing - it saves on the device
+and shares with the team by itself. The first time, it asks for the team code
+and explains that the photo is about to go on every family's phone; after that
+it is remembered and sharing is silent.
+
+A small label under the card always says which state a photo is in - **Shared
+with the team** or **Saved on this device only** - so a photo that never made it
+up does not sit there looking finished. If sharing fails, the photo still saves
+locally and a **Try Sharing Again** button appears.
+
+Leaving the code prompt blank keeps the photo local. Nothing is ever published
+without the code being entered.
 
 Behind that button is a small Netlify function that commits the file into
 `assets/players/` and updates `data/photos.json`. Netlify redeploys on the
