@@ -408,9 +408,16 @@
   .nav-toggle { width: 32px; height: 30px; }
   /* A key glyph in the masthead is the sort of thing the rest of this build
      took out. The chip collapses to its initial instead. */
-  .coach-chip { width: 28px; padding: 0; justify-content: center; letter-spacing: 0; overflow: hidden; }
-  .coach-chip { font-size: 0; }
-  .coach-chip::after { content: 'C'; font-size: 12px; letter-spacing: .04em; }
+  /* Two things push the C off centre if you let them: the flex gap sits
+     between the zero-width label and the ::after, and letter-spacing adds
+     a trailing gap after a single character. Both go to zero. */
+  .coach-chip {
+    width: 28px; padding: 0; gap: 0;
+    justify-content: center;
+    font-size: 0; letter-spacing: 0;
+    overflow: hidden;
+  }
+  .coach-chip::after { content: 'C'; font-size: 12px; letter-spacing: 0; }
 }
 
 @media (max-width: 380px) {
