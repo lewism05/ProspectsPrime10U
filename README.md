@@ -337,6 +337,29 @@ GameChanger does that - it is there so the rule is in front of you.
 
 ---
 
+## Two rooms
+
+The app is split in two rather than laid out as one long tab bar.
+
+**The Dugout** is where families live: Home, My Player, Roster, Batting,
+Pitching, Defense, Schedule. Open to anyone with the link.
+
+**Coaches Corner** holds Practice, Lineup and Manage - the decisions parents
+should not have to read. It is visible to everyone so nobody thinks the app is
+broken, and unlocks with the coach passcode.
+
+### My Player
+
+A parent picks their kid once and lands there every visit afterwards. It shows
+the baseball card, the Development Score with the reasons behind it in plain
+sentences, any team awards, what he does well, and every stat with one line
+explaining what it is and what normal looks like at 10U.
+
+What it does **not** show a parent is the critique. "Work on this" and its
+drills appear only in coach mode. A weakness read cold off a screen lands very
+differently than the same sentence from a coach at practice, and the parent view
+says so - it points them at that conversation instead.
+
 ## What parents and players see
 
 Everything except the Lineup and Manage tabs: team and player stats, the roster
@@ -366,6 +389,8 @@ js/
   config.js           ROSTER, SCHEDULE, BENCHMARKS, PASSCODE  <- edit this one
   csv.js              GameChanger CSV parser + column matching
   cards.js            baseball card: spin, flip, photo upload
+  progress.js         Development Score, game scores, awards
+  myplayer.js         a family's home screen
 netlify/functions/
   upload-photo.js     commits a shared player photo to the repo
   publish-data.js     commits data/team.json so stats reach every device

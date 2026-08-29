@@ -19,11 +19,41 @@
   /* ==================================================================
      ROUTING
      ================================================================== */
-  var TABS = ['dashboard', 'roster', 'batting', 'pitching', 'defense', 'schedule', 'development', 'lineup', 'manage'];
+  var TABS = ['dashboard', 'myplayer', 'roster', 'batting', 'pitching', 'defense', 'schedule',
+              'development', 'lineup', 'manage'];
+
+  var ROOM_OF = {
+    dashboard: 'dugout', myplayer: 'dugout', roster: 'dugout', batting: 'dugout',
+    pitching: 'dugout', defense: 'dugout', schedule: 'dugout',
+    development: 'corner', lineup: 'corner', manage: 'corner'
+  };
+  var currentRoom = 'dugout';
+
+  /* Only the tabs belonging to the open room are on screen. Nine flat tabs
+     made a parent scan past lineup tooling to reach their kid. */
+  function applyRoom(room) {
+    currentRoom = room;
+    document.querySelectorAll('.room-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.room === room);
+    });
+    document.querySelectorAll('.navtab').forEach(function (b) {
+      b.classList.toggle('hidden', b.dataset.room !== room);
+    });
+  }
+
+  function goRoom(room) {
+    applyRoom(room);
+    // Land on that room's first tab rather than leaving a stale page up.
+    var first = document.querySelector('.navtab[data-room="' + room + '"]');
+    if (first) goTab(first.dataset.tab);
+  }
 
   function goTab(tab, opts) {
     if (TABS.indexOf(tab) < 0) tab = 'dashboard';
     currentTab = tab;
+
+    var room = ROOM_OF[tab] || 'dugout';
+    if (room !== currentRoom) applyRoom(room);
 
     document.querySelectorAll('.navtab').forEach(function (b) {
       b.classList.toggle('active', b.dataset.tab === tab);
@@ -33,7 +63,7 @@
     });
 
     // The stat-window toggle only makes sense on stat pages
-    var showWindow = ['dashboard', 'roster', 'batting', 'pitching', 'development'].indexOf(tab) >= 0;
+    var showWindow = ['dashboard', 'myplayer', 'roster', 'batting', 'pitching', 'development'].indexOf(tab) >= 0;
     $('windowBar').classList.toggle('hidden', !showWindow);
 
     closeNav();
@@ -51,6 +81,7 @@
 
     switch (tab) {
       case 'dashboard':   V.renderDashboard(st); break;
+      case 'myplayer':    renderMyPlayer(st); break;
       case 'roster':      V.renderRoster(st); break;
       case 'batting':     V.renderBatting(st); break;
       case 'pitching':    V.renderPitching(st); break;
@@ -60,6 +91,18 @@
       case 'lineup':      V.renderLineup(st); break;
       case 'manage':      V.renderManage(st); wireUpload(); break;
     }
+  }
+
+  /* My Player mounts a real baseball card, so the card has to be attached
+     after the surrounding HTML lands. */
+  function renderMyPlayer(st) {
+    var host = $('myPlayerBody');
+    if (!host) return;
+    host.innerHTML = P10.MyPlayer.render(st);
+    var name = P10.MyPlayer.get();
+    var slot = $('mpCard');
+    var p = st.players.filter(function (x) { return x.name === name; })[0];
+    if (slot && p) P10.Cards.mount(slot, p, st.players);
   }
 
   function renderAll() {
@@ -165,6 +208,24 @@
       document.querySelectorAll('#windowSeg .seg-btn').forEach(function (b) { b.classList.remove('active'); });
       win.classList.add('active');
       Store.setWindow(win.dataset.window);
+      return;
+    }
+
+    /* --- room switch --- */
+    var room = t.closest('.room-btn');
+    if (room) { goRoom(room.dataset.room); return; }
+
+    /* --- my player: pick / change --- */
+    var mine = t.closest('[data-pick-mine]');
+    if (mine) {
+      P10.MyPlayer.set(mine.dataset.pickMine);
+      renderMyPlayer(Store.state);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (t.closest('#changePlayer')) {
+      P10.MyPlayer.set('');
+      renderMyPlayer(Store.state);
       return;
     }
 
@@ -752,6 +813,11 @@
   // Restore the tab from the URL hash
   var hash = (location.hash || '').replace('#', '');
   if (TABS.indexOf(hash) >= 0) currentTab = hash;
+
+  /* Apply the room filter once at boot. goTab only re-applies when the room
+     changes, so without this the very first render shows every tab from
+     both rooms at once. */
+  applyRoom(ROOM_OF[currentTab] || 'dugout');
 
   // Sync the window toggle to the saved preference
   document.querySelectorAll('#windowSeg .seg-btn').forEach(function (b) {

@@ -19,10 +19,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/base.css?v=20260829m">
-<link rel="stylesheet" href="css/layout.css?v=20260829m">
-<link rel="stylesheet" href="css/components.css?v=20260829m">
-<link rel="stylesheet" href="css/cards.css?v=20260829m">
+<link rel="stylesheet" href="css/base.css?v=20260829p">
+<link rel="stylesheet" href="css/layout.css?v=20260829p">
+<link rel="stylesheet" href="css/components.css?v=20260829p">
+<link rel="stylesheet" href="css/cards.css?v=20260829p">
 </head>
 <body>
 
@@ -57,18 +57,29 @@
     </div>
   </header>
 
-  <!-- ============================ SUB NAV ============================ -->
+  <!-- ======================= ROOMS + SUB NAV =======================
+       Two rooms, not nine flat tabs. The Dugout is where families live;
+       Coaches Corner holds the decisions parents should not have to read.
+       ================================================================ -->
   <nav class="subnav" id="subnav">
+    <div class="wrap roomrow">
+      <div class="rooms" id="roomSwitch">
+        <button class="room-btn active" data-room="dugout">The Dugout</button>
+        <button class="room-btn" data-room="corner">Coaches Corner <span class="lock">Coach</span></button>
+      </div>
+    </div>
     <div class="wrap subnav-inner" id="subnavInner">
-      <button class="navtab active" data-tab="dashboard">Dashboard</button>
-      <button class="navtab" data-tab="roster">Roster</button>
-      <button class="navtab" data-tab="batting">Batting</button>
-      <button class="navtab" data-tab="pitching">Pitching</button>
-      <button class="navtab" data-tab="defense">Defense</button>
-      <button class="navtab" data-tab="schedule">Schedule</button>
-      <button class="navtab" data-tab="development">Development</button>
-      <button class="navtab coach-only" data-tab="lineup">Lineup <span class="lock">Coach</span></button>
-      <button class="navtab coach-only" data-tab="manage">Manage <span class="lock">Coach</span></button>
+      <button class="navtab active" data-tab="dashboard" data-room="dugout">Home</button>
+      <button class="navtab" data-tab="myplayer" data-room="dugout">My Player</button>
+      <button class="navtab" data-tab="roster" data-room="dugout">Roster</button>
+      <button class="navtab" data-tab="batting" data-room="dugout">Batting</button>
+      <button class="navtab" data-tab="pitching" data-room="dugout">Pitching</button>
+      <button class="navtab" data-tab="defense" data-room="dugout">Defense</button>
+      <button class="navtab" data-tab="schedule" data-room="dugout">Schedule</button>
+
+      <button class="navtab" data-tab="development" data-room="corner">Practice</button>
+      <button class="navtab" data-tab="lineup" data-room="corner">Lineup</button>
+      <button class="navtab" data-tab="manage" data-room="corner">Manage</button>
     </div>
   </nav>
 
@@ -108,6 +119,11 @@
       <section class="page active" id="page-dashboard">
         <div class="statbar" id="statbar"></div>
         <div id="dashboardBody"></div>
+      </section>
+
+      <!-- ==================== MY PLAYER ==================== -->
+      <section class="page" id="page-myplayer">
+        <div id="myPlayerBody"></div>
       </section>
 
       <!-- ==================== ROSTER ==================== -->
@@ -206,21 +222,22 @@
 </div>
 
 <!-- Chart.js is vendored locally so the site works with no CDN dependency. -->
-<script src="vendor/chart.umd.min.js?v=20260829m"></script>
-<script src="js/config.js?v=20260829m"></script>
-<script src="js/csv.js?v=20260829m"></script>
-<script src="js/stats.js?v=20260829m"></script>
-<script src="js/store.js?v=20260829m"></script>
-<script src="js/drills.js?v=20260829m"></script>
-<script src="js/insights.js?v=20260829m"></script>
-<script src="js/lineup.js?v=20260829m"></script>
-<script src="js/schedule.js?v=20260829m"></script>
-<script src="js/gamelog.js?v=20260829m"></script>
-<script src="js/progress.js?v=20260829m"></script>
-<script src="js/charts.js?v=20260829m"></script>
-<script src="js/views.js?v=20260829m"></script>
-<script src="js/matchup.js?v=20260829m"></script>
-<script src="js/cards.js?v=20260829m"></script>
-<script src="js/app.js?v=20260829m"></script>
+<script src="vendor/chart.umd.min.js?v=20260829p"></script>
+<script src="js/config.js?v=20260829p"></script>
+<script src="js/csv.js?v=20260829p"></script>
+<script src="js/stats.js?v=20260829p"></script>
+<script src="js/store.js?v=20260829p"></script>
+<script src="js/drills.js?v=20260829p"></script>
+<script src="js/insights.js?v=20260829p"></script>
+<script src="js/lineup.js?v=20260829p"></script>
+<script src="js/schedule.js?v=20260829p"></script>
+<script src="js/gamelog.js?v=20260829p"></script>
+<script src="js/progress.js?v=20260829p"></script>
+<script src="js/charts.js?v=20260829p"></script>
+<script src="js/views.js?v=20260829p"></script>
+<script src="js/matchup.js?v=20260829p"></script>
+<script src="js/myplayer.js?v=20260829p"></script>
+<script src="js/cards.js?v=20260829p"></script>
+<script src="js/app.js?v=20260829p"></script>
 </body>
 </html>
