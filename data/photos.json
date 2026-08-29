@@ -1,6 +1,4 @@
 {
-  "note": "Slugs of players who have a team photo in assets/players/.",
-  "players": [
-    "origin-check"
-  ]
+  "note": "Slugs of players who have a team photo in assets/players/. Written automatically when a photo is shared with the team.",
+  "players": []
 }
