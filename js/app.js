@@ -86,10 +86,18 @@
       $('footMeta').textContent = 'Awaiting first stat upload';
       return;
     }
+    if (Store.isSample()) {
+      dot.className = 'live-dot stale';
+      lab.textContent = 'Sample data';
+      $('livePill').title = 'These are test numbers, not real stats. Clear them from Manage.';
+      $('footMeta').textContent = 'Showing sample data — not real stats';
+      return;
+    }
     var age = Date.now() - new Date(st.meta.updatedAt).getTime();
     var days = age / 86400000;
     dot.className = 'live-dot' + (days > 10 ? ' stale' : '');
     lab.textContent = V.timeAgo(st.meta.updatedAt);
+    $('livePill').title = 'Data status - click to refresh';
     $('footMeta').textContent = 'Stats updated ' + V.timeAgo(st.meta.updatedAt);
   }
 
@@ -751,6 +759,99 @@
     }
   });
 
+
+  /* ==================================================================
+     TEAM PHOTOS
+     ================================================================== */
+  document.addEventListener('click', function (e) {
+    /* tap a cell to set that player's photo */
+    var cell = e.target.closest('[data-photo-player]');
+    if (cell) {
+      var name = cell.dataset.photoPlayer;
+      var inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'image/*';
+      inp.onchange = function () {
+        var f = this.files && this.files[0];
+        if (!f) return;
+        P10.Cards.processImage(f).then(function (url) {
+          if (!P10.Cards.setPhoto(name, url)) {
+            toast('Not enough space. Clear a photo and try again.', 'bad');
+            return;
+          }
+          V.renderManage(Store.state);
+          wireUpload();
+          toast('Photo set for ' + name, 'good');
+        }).catch(function (err) { toast(err.message || 'Could not read that image', 'bad'); });
+      };
+      inp.click();
+      return;
+    }
+
+    /* save every local photo as a correctly-named file */
+    if (e.target.closest('#downloadPhotos')) {
+      var saved = 0;
+      Store.state.players.forEach(function (p, i) {
+        var data = P10.Cards.getPhoto(p.name);
+        if (!data) return;
+        saved++;
+        // Stagger the saves; browsers drop rapid-fire downloads.
+        setTimeout(function () {
+          var a = document.createElement('a');
+          a.href = data;
+          a.download = P10.Cards.slug(p.name) + '.jpg';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }, i * 320);
+      });
+      // The manifest has to ship alongside the images or the site will not
+      // know to look for them.
+      if (saved) {
+        var slugs = Store.state.players
+          .filter(function (p) { return P10.Cards.getPhoto(p.name); })
+          .map(function (p) { return P10.Cards.slug(p.name); });
+        setTimeout(function () {
+          var man = new Blob([JSON.stringify({
+            note: 'Slugs of players who have a team photo in assets/players/.',
+            players: slugs
+          }, null, 2)], { type: 'application/json' });
+          var url = URL.createObjectURL(man);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'photos.json';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        }, saved * 320 + 200);
+      }
+
+      if (!saved) {
+        toast('No photos added yet - tap a player above first', 'info');
+      } else {
+        openModal('Photo pack',
+          '<div class="msg msg-good"><strong>' + saved + ' photo' + (saved > 1 ? 's' : '') +
+          ' downloading.</strong></div>' +
+          '<div class="hint mt-16">To put them on every device:</div>' +
+          '<ol class="drill-steps mt-8" style="font-size:13px">' +
+            '<li>Move the <code>.jpg</code> files into <code>assets/players/</code>.</li>' +
+            '<li>Move <code>photos.json</code> into <code>data/</code>, replacing the old one. ' +
+              'Without it the site will not know the photos are there.</li>' +
+            '<li>Commit and push. Netlify redeploys in about 40 seconds.</li>' +
+            '<li>Every parent, on every phone, now sees them. Nothing for them to do.</li>' +
+          '</ol>' +
+          '<div class="hint mt-16">The names are already correct, so do not rename them.</div>');
+      }
+      return;
+    }
+
+    if (e.target.closest('#clearPhotos')) {
+      Store.state.players.forEach(function (p) { P10.Cards.clearPhoto(p.name); });
+      V.renderManage(Store.state);
+      wireUpload();
+      toast('Local photos cleared. Team photos are untouched.', 'info');
+      return;
+    }
+  });
+
   /* ==================================================================
      TOAST
      ================================================================== */
@@ -796,6 +897,10 @@
       renderAll();
     }
   });
+
+  // Team photo manifest first, so cards paint with the right image on the
+  // very first render rather than popping in a beat later.
+  P10.Cards.loadManifest().then(function () { renderAll(); });
 
   Store.init();
 

@@ -66,17 +66,10 @@ P10.Views = (function () {
   /* ==================================================================
      HERO + STAT BAR
      ================================================================== */
-  /* A loud, unmissable banner whenever the numbers on screen are fake.
-     Nobody should ever mistake sample data for their kid's real season. */
-  function sampleBanner(st) {
-    if (!P10.Store.isSample()) return '';
-    return '<div class="sample-banner" id="sampleBanner">' +
-      '<span class="sb-dot"></span>' +
-      '<span class="sb-text"><strong>Sample data.</strong> These are made-up numbers for testing. ' +
-      'Nothing here is real.</span>' +
-      '<button class="btn btn-sm btn-danger" id="clearSample">Clear It</button>' +
-      '</div>';
-  }
+  /* Sample data no longer shouts from a banner. It still has to be
+     discoverable though, so it is marked on the data pill in the masthead
+     and called out in Manage - quiet, but not hidden. */
+  function sampleBanner() { return ''; }
 
   function renderHero(st) {
     var t = st.team;
@@ -1055,6 +1048,38 @@ P10.Views = (function () {
           : '<div class="msg msg-good mt-16">Plate appearances are spread evenly across the roster. That is exactly right for this age.</div>') +
         '</div></div>';
     }
+
+    /* ---- Team photos ---- */
+    html += '<div class="card mb-16">' +
+      cardHead('Team Photos', 'Shared with everyone') +
+      '<div class="card-body">' +
+      '<div class="hint mb-16">The site is static, so there is no server for a phone to upload to. ' +
+      'A photo a parent adds lives on their device and nowhere else. The photos <strong>everybody</strong> ' +
+      'sees are files committed to <code>assets/players/</code>. Add them here, download the pack, ' +
+      'drop the files in that folder and push - then they are on every device.</div>' +
+      '<div class="photogrid">' +
+      st.players.map(function (p) {
+        var local = P10.Cards.getPhoto(p.name);
+        return '<div class="photocell" data-photo-player="' + esc(p.name) + '">' +
+          '<div class="pc-img' + (local || P10.Cards.hasTeamPhoto(p.name) ? '' : ' none') + '">' +
+            (local ? '<img src="' + local + '" alt="">'
+             : P10.Cards.hasTeamPhoto(p.name)
+               ? '<img src="' + esc(P10.Cards.teamPhotoUrl(p.name)) + '" alt="">'
+               : '') +
+            '<span class="pc-add">＋</span>' +
+          '</div>' +
+          '<div class="pc-name">' + esc(p.short || p.name) + '</div>' +
+          '<div class="pc-src">' + (local ? 'This device' : P10.Cards.hasTeamPhoto(p.name) ? 'Team photo' : 'None') + '</div>' +
+          '</div>';
+      }).join('') +
+      '</div>' +
+      '<div class="row gap-8 mt-16" style="flex-wrap:wrap">' +
+        '<button class="btn btn-primary" id="downloadPhotos">Download Photo Pack</button>' +
+        '<button class="btn btn-ghost" id="clearPhotos">Clear My Local Photos</button>' +
+      '</div>' +
+      '<div class="hint mt-8">The pack saves each photo already named the way the site expects ' +
+      '(<code>jackson-lewis.jpg</code>). Nothing to rename.</div>' +
+      '</div></div>';
 
     /* ---- Game log ---- */
     html += P10.Matchup.renderLog(st);

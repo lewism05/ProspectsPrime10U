@@ -3,10 +3,18 @@
    Front is the portrait, back is the full stat line. One spin on reveal,
    then flip to read the back, the way a real card works.
 
-   Photos are stored per browser in localStorage as compressed JPEG data
-   URLs. That means a photo a parent uploads lives on THAT device only -
-   it does not sync to other families and Claude never sees it. Anything
-   that syncs would need a server, which this app deliberately does not have.
+   Photos come from two places, in this order:
+
+     1. A TEAM photo committed to assets/players/<slug>.jpg. This is the one
+        everybody sees, on every device, because it ships with the site.
+     2. A LOCAL photo in this browser's storage, which overrides the team
+        photo for whoever added it.
+
+   There is no third option. The site is static - there is no server to
+   receive an upload, so a photo a parent adds on their phone physically
+   cannot reach anyone else's device. Getting a photo to the whole team
+   means committing the file, which is what the Download Photo Pack button
+   in Manage exists to make easy.
    ========================================================================== */
 window.P10 = window.P10 || {};
 
@@ -37,6 +45,33 @@ P10.Cards = (function () {
   function clearPhoto(name) {
     try { localStorage.removeItem(PHOTO_PREFIX + slug(name)); } catch (e) {}
   }
+  /* ------------------------------------------------------------------
+     TEAM PHOTOS
+     A manifest rather than blind probing. Guessing at
+     assets/players/<slug>.jpg for every player fires a 404 per player on
+     every page load - wasted requests on a parent's phone at the field,
+     and enough console noise to bury a real error. One tiny JSON file
+     answers the question once.
+     ------------------------------------------------------------------ */
+  var teamPhotos = null;   // Set of slugs, null until loaded
+
+  function loadManifest() {
+    return fetch('data/photos.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        teamPhotos = {};
+        ((j && j.players) || []).forEach(function (sl) { teamPhotos[sl] = true; });
+        return teamPhotos;
+      })
+      .catch(function () { teamPhotos = {}; return teamPhotos; });
+  }
+
+  function hasTeamPhoto(name) {
+    return !!(teamPhotos && teamPhotos[slug(name)]);
+  }
+
+  function teamPhotoUrl(name) { return 'assets/players/' + slug(name) + '.jpg'; }
+
   function photoCount() {
     var n = 0;
     try {
@@ -95,6 +130,7 @@ P10.Cards = (function () {
 
   function renderFront(p) {
     var photo = getPhoto(p.name);
+    var src = photo || (hasTeamPhoto(p.name) ? teamPhotoUrl(p.name) : null);
     var num = (p.num !== null && p.num !== undefined) ? p.num : '';
     var nm = splitName(p.name);
     var pos = p.position || (p.isPitcher ? 'P' : '');
@@ -106,8 +142,9 @@ P10.Cards = (function () {
       '<div class="bbface bbfront">' +
         '<div class="bbf-window">' +
 
-          (photo
-            ? '<img class="bbf-img" src="' + photo + '" alt="' + esc(p.name) + '">'
+          /* A local photo overrides the team one. */
+          (src
+            ? '<img class="bbf-img" src="' + esc(src) + '" alt="' + esc(p.name) + '">'
             : '<div class="bbf-empty" id="bbEmpty">' +
                 '<div class="bbf-empty-num">' + esc(num || '—') + '</div>' +
                 '<div class="bbf-empty-cta">Add a photo</div>' +
@@ -272,6 +309,15 @@ P10.Cards = (function () {
       '</div>';
   }
 
+  function hintFor(p) {
+    if (getPhoto(p.name)) {
+      return 'Saved on this device. To put it on the card for everyone, send it to ' +
+             'your coach - the site has no server to upload it to.';
+    }
+    return 'A photo you add is saved on this device only. Team photos are the ones ' +
+           'a coach commits to the site, and those show up for everybody.';
+  }
+
   /* ================= mount ================= */
 
   /* Renders the card into `host` and wires the flip and photo controls.
@@ -301,8 +347,7 @@ P10.Cards = (function () {
           (getPhoto(p.name) ? '<button class="btn btn-ghost" id="bbRemove">Remove</button>' : '') +
         '</div>' +
         '<div class="card-err hidden" id="bbErr"></div>' +
-        '<div class="card-hint">Photos are saved on this device only. Other families will not see ' +
-          'one you add here, and adding one never uploads it anywhere.</div>' +
+        '<div class="card-hint">' + hintFor(p) + '</div>' +
       '</div>';
 
     var shellEl = host.querySelector('#bbShell');
@@ -410,6 +455,10 @@ P10.Cards = (function () {
   return {
     mount: mount,
     getPhoto: getPhoto,
+    teamPhotoUrl: teamPhotoUrl,
+    hasTeamPhoto: hasTeamPhoto,
+    loadManifest: loadManifest,
+    processImage: processImage,
     setPhoto: setPhoto,
     clearPhoto: clearPhoto,
     photoCount: photoCount,

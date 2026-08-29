@@ -107,8 +107,9 @@ toggle and the hot/cold trend arrows.
 ### Trying it before real stats exist
 
 **Manage > Load Sample Data** fills every screen with made-up numbers in one
-click. A loud striped banner sits at the top of the page the whole time it is
-on, and **Clear It** (or Clear All Data) removes it completely.
+click. While it is on, the status pill in the masthead reads **Sample data**
+instead of a timestamp, and the footer says so too. **Clear All Data** in Manage
+removes it.
 
 Jackson's line in the sample is carried over from his real 9U season. The other
 eight are invented. The files live in `sample/` in the real 174-column
@@ -125,15 +126,28 @@ their baseball card. It spins in once, then sits there. **Flip Card** turns it
 over to a full stat back: batting, pitching, fielding, innings by position, and
 a short scouting line generated from what the numbers actually say.
 
-**Photos.** Any parent can add a photo to a card. It is downscaled and
-compressed in the browser (a 4MB phone photo becomes about 60-90KB) and saved in
-that browser's local storage.
+**Photos.** There are two kinds, and the difference matters.
 
-Be clear with families about what that means: **a photo lives on the device that
-added it.** It is not uploaded anywhere, it is not visible to other families,
-and it does not follow them to another phone. Storing photos centrally would
-need a server, which this app deliberately does not have. Clearing browser data
-removes them.
+A **team photo** is a file committed to `assets/players/<slug>.jpg`, named after
+the player: `jackson-lewis.jpg`, `manuel-cruz-jr.jpg`. It ships with the site, so
+**everybody sees it, on every device.** That is the one you want.
+
+A **local photo** is one someone adds from the card itself. It is downscaled and
+compressed in their browser and saved in that browser's storage. It shows up for
+them and nobody else, on that one device.
+
+That is not a limitation I chose - it is what a static site is. There is no
+server for a phone to upload to. A photo added on a phone physically cannot
+reach anyone else's device.
+
+So the workflow is: **Coach > Manage > Team Photos.** Tap a player, pick their
+photo, repeat. Hit **Download Photo Pack** and every photo saves already named
+correctly. Drop them into `assets/players/`, commit, push. Forty seconds later
+every parent has them.
+
+If a parent wants their kid's photo on the card for the whole team, they send it
+to you and you add it. Tell them that up front, or they will add one on their
+phone, see it on their phone, and reasonably assume everyone else can too.
 
 ### Getting stats to everyone else
 
@@ -236,10 +250,10 @@ To test with fake data before your real stats are ready, upload the files in
 
 ## Troubleshooting
 
-**A parent lost their photo.** Photos live in one browser's local storage.
-Clearing browsing data, switching phones or using a private window all lose
-them. Re-adding takes ten seconds. This is a limitation of having no server, not
-a bug.
+**A photo shows on one device but not another.** That is a local photo, not a
+team photo. Local photos live in one browser's storage and cannot travel. Add it
+under Manage > Team Photos, download the pack, commit the file to
+`assets/players/`, and it will be on every device.
 
 **A player shows no stats.** Their name in GameChanger does not match
 `js/config.js`. The matcher handles `Last, First`, suffixes like Jr., and

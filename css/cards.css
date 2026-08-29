@@ -144,6 +144,34 @@
 }
 .bbback { transform: rotateY(180deg); }
 
+/* --------------------------------------------------------------------------
+   Do not trust backface-visibility on its own.
+
+   Every face here sits inside a preserve-3d parent while carrying
+   overflow:hidden and a masked pseudo-element for the chrome frame. That
+   combination makes several mobile browsers - iOS Safari in particular -
+   flatten the subtree and paint BOTH faces. When that happens the front
+   shows through the back mirrored, and every word on the stat side reads
+   backwards. It renders perfectly on desktop, which is exactly why it is
+   easy to miss.
+
+   So visibility is gated explicitly as well. Only one face is ever painted,
+   and the swap is a hard cut timed to the midpoint of the flip, when the
+   card is edge-on and the change cannot be seen.
+   -------------------------------------------------------------------------- */
+.bbfront, .bbback {
+  transition: opacity 0s linear .30s, visibility 0s linear .30s;
+}
+.bbcard .bbfront { opacity: 1; visibility: visible; }
+.bbcard .bbback  { opacity: 0; visibility: hidden; }
+.bbcard.flipped .bbfront { opacity: 0; visibility: hidden; }
+.bbcard.flipped .bbback  { opacity: 1; visibility: visible; }
+
+/* During the reveal tumble the front stays up the whole way - there is no
+   flip happening, so nothing should swap. */
+.bbcard.no-transition .bbfront,
+.bbcard.no-transition .bbback { transition: none; }
+
 /* ==========================================================================
    FRONT
    ========================================================================== */

@@ -1268,3 +1268,36 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   .prow { grid-template-columns: repeat(3, minmax(0,1fr)) 32px; }
   .prow select.input { grid-column: 1 / -1; }
 }
+
+/* ==========================================================================
+   TEAM PHOTOS
+   ========================================================================== */
+.photogrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px,1fr)); gap: 11px; }
+.photocell { cursor: pointer; }
+.pc-img {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: linear-gradient(178deg, #1C2431, #0D1219);
+  border: 1px solid var(--line-strong);
+  transition: border-color .18s;
+}
+.photocell:hover .pc-img { border-color: var(--chrome-dim); }
+.pc-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.pc-add {
+  position: absolute; inset: 0;
+  display: none; align-items: center; justify-content: center;
+  font-size: 26px; color: var(--text-3);
+  background: rgba(7,9,12,.35);
+}
+.pc-img.none .pc-add { display: flex; background: none; }
+.photocell:hover .pc-add { display: flex; }
+.pc-name {
+  font-size: 11.5px; font-weight: 600; margin-top: 6px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pc-src {
+  font-family: var(--f-display); font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-3); margin-top: 1px;
+}
