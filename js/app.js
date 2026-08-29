@@ -168,6 +168,14 @@
       return;
     }
 
+    /* --- leaderboard metric --- */
+    var lm = t.closest('#leaderSeg .seg-btn');
+    if (lm) {
+      V.setLeaderMetric(lm.dataset.leader);
+      V.renderDashboard(Store.state);
+      return;
+    }
+
     /* --- roster sort --- */
     var rs = t.closest('#rosterSort .seg-btn');
     if (rs) {

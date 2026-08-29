@@ -85,11 +85,15 @@ P10.Views = (function () {
     set('heroMeta', meta.join(''));
 
     var rec = [];
+    var wl = record();
+    if (wl.played) {
+      rec.push(recBlock(wl.w + '\u2013' + wl.l + (wl.t ? '\u2013' + wl.t : ''), 'Record'));
+    }
     if (t && t.withData) {
       rec.push(recBlock(S.rate(t.ops), 'OPS'));
-      rec.push(recBlock(S.rate(t.avg), 'AVG'));
+      if (!wl.played) rec.push(recBlock(S.rate(t.avg), 'AVG'));
       if (t.ip > 0) rec.push(recBlock(S.fixed(t.era, 2), 'ERA'));
-    } else {
+    } else if (!wl.played) {
       rec.push(recBlock(C.roster.length, 'Roster'));
       rec.push(recBlock(C.team.ageGroup, 'Division'));
     }
@@ -184,72 +188,39 @@ P10.Views = (function () {
   /* ==================================================================
      DASHBOARD
      ================================================================== */
+  var leaderMetric = 'ops';
+  function setLeaderMetric(v) { leaderMetric = v; }
+
   function renderDashboard(st) {
     var players = st.players, t = st.team;
 
     if (!t || !t.withData) {
-      set('dashboardBody', nextGameCard(st) + needData());
+      set('dashboardBody', lastGameCard(st) + nextGameCard(st) + needData());
       return;
     }
 
+    var prog = P10.Progress.compute(players, st);
     var html = '';
 
-    /* ---- Row 1: team trend (wide) + next game ---- */
-    html += '<div class="grid g-main mb-16">';
-    html += '<div class="card card-accent">' +
-      cardHead('Team Trend', 'Average OPS by window') +
-      '<div class="card-body"><div class="chart-box short"><canvas id="chartTeamTrend"></canvas></div></div>' +
+    /* ---- Row 1: what just happened, and what is next ---- */
+    html += '<div class="grid g-2 mb-16">' + lastGameCard(st) + nextGameCard(st) + '</div>';
+
+    /* ---- Row 2: awards ---- */
+    html += awardsCard(prog);
+
+    /* ---- Row 3: leaders + who is climbing ---- */
+    html += '<div class="grid g-2 mb-16">' +
+      leaderboardCard(players, st) +
+      developmentCard(prog) +
       '</div>';
-    html += nextGameCard(st);
-    html += '</div>';
 
-    /* ---- Row 2: three leaderboards ---- */
-    html += '<div class="grid g-3 mb-16">';
-
-    html += leaderCard('Top Bats', players
-      .filter(function (p) { return p.bat && p.bat.ops > 0; })
-      .sort(function (a, b) { return b.bat.ops - a.bat.ops; })
-      .slice(0, 6)
-      .map(function (p) { return { p: p, val: S.rate(p.bat.ops), delta: p.heat }; }));
-
-    html += leaderCard('Getting On Base', players
-      .filter(function (p) { return p.bat && p.bat.obp > 0; })
-      .sort(function (a, b) { return b.bat.obp - a.bat.obp; })
-      .slice(0, 6)
-      .map(function (p) { return { p: p, val: S.rate(p.bat.obp) }; }));
-
-    var arms = L.pitcherRank(players);
-    if (arms.length) {
-      html += '<div class="card">' + cardHead('Staff Order', 'Strikes first') +
-        '<div class="card-body flush"><div class="lead-list">' +
-        arms.slice(0, 6).map(function (a, i) {
-          return '<div class="lead-row" data-player="' + esc(a.player.name) + '">' +
-            '<span class="lead-rank">' + (i + 1) + '</span>' +
-            '<span class="lead-name grow">' + esc(a.player.name) +
-            '<div class="pname-sub">' + Math.round(a.strike * 100) + '% strikes · ' +
-            S.ipText(a.ip) + ' IP</div></span>' +
-            '<span class="slot-grade grade-' + a.grade + '">' + a.grade + '</span>' +
-            '</div>';
-        }).join('') +
-        '</div></div></div>';
-    } else {
-      html += leaderCard('Most Hits', players
-        .filter(function (p) { return p.bat && p.bat.h > 0; })
-        .sort(function (a, b) { return b.bat.h - a.bat.h; })
-        .slice(0, 6)
-        .map(function (p) { return { p: p, val: String(p.bat.h) }; }));
-    }
-
-    html += '</div>';
-
-    /* ---- Row 3: OPS chart + practice priority ---- */
+    /* ---- Row 4: the OPS spread + practice ---- */
     html += '<div class="grid g-main">';
-
     html += '<div class="card">' +
-      cardHead('OPS Leaderboard', S.WINDOW_LABELS[st.viewWindow]) +
+      cardHead('OPS Spread', S.WINDOW_LABELS[st.viewWindow]) +
       '<div class="card-body"><div class="chart-box tall"><canvas id="chartOps"></canvas></div>' +
-      '<div class="hint mt-8">Green bars are elite for 10U, silver is above average, gold means there is room to grow. ' +
-      'Tap any name in a table or card to open that player.</div>' +
+      '<div class="hint mt-8">Green is elite for 10U, silver above average, gold means room to grow. ' +
+      'Tap any name anywhere in the app to open that player.</div>' +
       '</div></div>';
 
     var focus = I.teamFocus(players, t);
@@ -259,20 +230,193 @@ P10.Views = (function () {
         '<div class="card-body">' +
         focus.slice(0, 3).map(function (f) {
           return '<div class="issue sev-' + (f.priority >= 3 ? 'high' : f.priority === 2 ? 'med' : 'low') + '">' +
-            '<div class="issue-tag">' + esc((f.area || '').slice(0,3)) + '</div>' +
-            '<div class="grow"><div class="issue-t">' + esc(f.title) + ' <span class="badge">' + esc(f.stat) + '</span></div>' +
+            '<div class="issue-tag">' + esc((f.area || '').slice(0, 3)) + '</div>' +
+            '<div class="grow"><div class="issue-t">' + esc(f.title) +
+            ' <span class="badge">' + esc(f.stat) + '</span></div>' +
             '<div class="issue-d">' + esc(f.detail) + '</div></div></div>';
         }).join('') +
         '<button class="btn btn-ghost btn-block mt-8" data-goto="development">See The Drills</button>' +
         '</div></div>';
     }
-
     html += '</div>';
 
     set('dashboardBody', html);
-
-    Ch.teamTrend('chartTeamTrend', st.trend);
     Ch.opsBar('chartOps', players);
+  }
+
+  /* ==================================================================
+     LAST GAME
+     The first question anyone opens this app with is how we did. It had
+     no answer anywhere on the front page, which is a strange thing for a
+     team app to be missing.
+     ================================================================== */
+  function lastGameCard(st) {
+    var games = P10.GameLog.all();
+    if (!games.length) {
+      return '<div class="card"><div class="card-head"><div class="card-title">Last Game</div></div>' +
+        '<div class="card-body"><div class="hint">No games logged yet. ' +
+        (st.coach
+          ? 'Log one from Manage and the result, the arms you used and the head-to-head history all start working.'
+          : 'Results appear here once your coach logs a game.') +
+        '</div></div></div>';
+    }
+
+    var g = games[0];
+    var scored = g.us !== null && g.them !== null;
+    var cls = !scored ? 'tie' : g.us > g.them ? 'win' : g.us < g.them ? 'loss' : 'tie';
+    var word = !scored ? '' : g.us > g.them ? 'Won' : g.us < g.them ? 'Lost' : 'Tied';
+
+    var rec = record(games);
+    var arms = (g.pitchers || []).filter(function (p) { return p.name; });
+
+    return '<div class="card card-accent last-game ' + cls + '">' +
+      '<div class="card-head"><div class="card-title">Last Game</div>' +
+      '<div class="card-note">' + esc(P10.Matchup.fmtDate(g.date)) + '</div></div>' +
+      '<div class="card-body">' +
+        '<div class="lg-top">' +
+          '<div class="lg-score">' +
+            (scored ? '<span class="lg-us">' + g.us + '</span><span class="lg-dash">&ndash;</span>' +
+                      '<span class="lg-them">' + g.them + '</span>'
+                    : '<span class="lg-noscore">No score</span>') +
+          '</div>' +
+          '<div class="lg-meta">' +
+            '<div class="lg-result">' + esc(word) + ' ' + (g.away ? 'at' : 'vs') + ' ' +
+              esc(g.opponent || 'TBD') + '</div>' +
+            '<div class="lg-rec">Season ' + rec.w + '&ndash;' + rec.l +
+              (rec.t ? '&ndash;' + rec.t : '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        (arms.length
+          ? '<div class="lg-arms">' + arms.map(function (a) {
+              return '<span class="lg-arm" data-player="' + esc(a.name) + '">' +
+                esc(a.name) + '<b>' + S.ipText(Number(a.ip) || 0) + ' IP</b>' +
+                (a.k ? '<b>' + a.k + ' K</b>' : '') + '</span>';
+            }).join('') + '</div>'
+          : '') +
+        (g.notes ? '<div class="lg-note">' + esc(g.notes) + '</div>' : '') +
+        '<button class="btn btn-ghost btn-block mt-8" data-goto="schedule">Full Schedule</button>' +
+      '</div></div>';
+  }
+
+  function record(games) {
+    var w = 0, l = 0, t = 0;
+    (games || P10.GameLog.all()).forEach(function (g) {
+      if (g.us === null || g.them === null) return;
+      if (g.us > g.them) w++; else if (g.us < g.them) l++; else t++;
+    });
+    return { w: w, l: l, t: t, played: w + l + t };
+  }
+
+  /* ==================================================================
+     AWARDS
+     ================================================================== */
+  function awardsCard(prog) {
+    var a = prog.awards;
+    var shown = prog.categories.filter(function (c) { return a[c.key]; });
+    if (!shown.length) return '';
+
+    return '<div class="card mb-16">' +
+      cardHead('Team Awards', 'From the current numbers') +
+      '<div class="card-body">' +
+      '<div class="awardgrid">' +
+      shown.map(function (c) {
+        var w = a[c.key];
+        return '<div class="awardcell' + (c.key === 'mvp' ? ' is-mvp' : '') + '" ' +
+          'data-player="' + esc(w.player.name) + '">' +
+          '<div class="aw-cat">' + esc(c.name) + '</div>' +
+          '<div class="aw-name">' + esc(w.player.name) + '</div>' +
+          '<div class="aw-val">' + esc(w.value) + '</div>' +
+          '<div class="aw-detail">' + esc(w.detail) + '</div>' +
+          '</div>';
+      }).join('') +
+      '</div>' +
+      '<div class="hint mt-16">Awards spread across the roster on purpose - once a player has one, ' +
+      'the next category goes to somebody else where there is a reasonable candidate. ' +
+      'Game MVP is left alone, so it stays a straight result.</div>' +
+      '</div></div>';
+  }
+
+  /* ==================================================================
+     DEVELOPMENT
+     ================================================================== */
+  function developmentCard(prog) {
+    var rows = prog.dev.filter(function (r) { return r.score !== null; })
+                       .sort(function (a, b) { return b.score - a.score; });
+
+    if (!rows.length) {
+      return '<div class="card">' + cardHead('Development', 'Progress against themselves') +
+        '<div class="card-body"><div class="hint">Needs a Last 4 or Last 8 export alongside the ' +
+        'season file. Development compares a recent window against each player\'s own baseline, ' +
+        'so it cannot run on season totals alone.</div></div></div>';
+    }
+
+    return '<div class="card">' +
+      cardHead('Development', '50 is holding steady') +
+      '<div class="card-body flush">' +
+      rows.slice(0, 8).map(function (r) {
+        var b = P10.Progress.band(r.score);
+        var pct = Math.max(2, Math.min(100, r.score));
+        return '<div class="devrow" data-player="' + esc(r.player.name) + '">' +
+          '<div class="dev-top">' +
+            '<span class="dev-name">' + esc(r.player.name) + '</span>' +
+            '<span class="dev-score ' + b.cls + '">' + r.score + '</span>' +
+          '</div>' +
+          '<div class="dev-bar"><span class="dev-fill ' + b.cls + '" style="width:' + pct + '%"></span>' +
+            '<span class="dev-mid"></span></div>' +
+          '<div class="dev-why">' + esc(P10.Progress.explain(r)[0] || 'No big swings either way') + '</div>' +
+          '</div>';
+      }).join('') +
+      '</div>' +
+      '<div class="card-body" style="border-top:1px solid var(--line-soft)">' +
+      '<div class="hint">This measures each player against his <em>own</em> earlier numbers, not ' +
+      'against the roster. A kid can be ninth in OPS and top of this list, which is usually the ' +
+      'more useful thing to know at ten years old.</div>' +
+      '</div></div>';
+  }
+
+  /* ==================================================================
+     LEADERBOARD - one card, switchable, instead of three lists of the
+     same four names.
+     ================================================================== */
+  function leaderboardCard(players, st) {
+    var metrics = {
+      ops: { label: 'OPS', get: function (p) { return p.bat && p.bat.ops; }, fmt: S.rate },
+      obp: { label: 'On Base', get: function (p) { return p.bat && p.bat.obp; }, fmt: S.rate },
+      qab: { label: 'QAB%', get: function (p) { return p.bat && p.bat.qab; },
+             fmt: function (v) { return Math.round(v * 100) + '%'; } },
+      arm: { label: 'Arms', get: function (p) { return p.pit && p.pit.ip >= C.minSample.ip ? p.pit.strike : null; },
+             fmt: function (v) { return Math.round(v * 100) + '%'; } }
+    };
+    var m = metrics[leaderMetric] || metrics.ops;
+
+    var rows = players.map(function (p) { return { p: p, v: m.get(p) }; })
+      .filter(function (x) { return x.v !== null && x.v !== undefined && x.v > 0; })
+      .sort(function (a, b) { return b.v - a.v; })
+      .slice(0, 8);
+
+    return '<div class="card">' +
+      '<div class="card-head"><div class="card-title">Leaders</div>' +
+      '<div class="seg" id="leaderSeg">' +
+        Object.keys(metrics).map(function (k) {
+          return '<button class="seg-btn' + (k === leaderMetric ? ' active' : '') +
+            '" data-leader="' + k + '">' + esc(metrics[k].label) + '</button>';
+        }).join('') +
+      '</div></div>' +
+      '<div class="card-body tight">' +
+      (rows.length
+        ? '<div class="lead-list">' + rows.map(function (r, i) {
+            return '<div class="lead-row" data-player="' + esc(r.p.name) + '">' +
+              '<span class="lead-rank">' + (i + 1) + '</span>' +
+              '<span class="lead-name">' + esc(r.p.name) + '</span>' +
+              (leaderMetric === 'arm'
+                ? '<span class="pname-sub" style="margin-right:10px">' + S.ipText(r.p.pit.ip) + ' IP</span>'
+                : '') +
+              '<span class="lead-val">' + esc(m.fmt(r.v)) + '</span>' +
+              (leaderMetric === 'ops' ? '<span class="lead-delta">' + deltaText(r.p.heat) + '</span>' : '') +
+              '</div>';
+          }).join('') + '</div>'
+        : '<div class="hint">No data for this one yet.</div>') +
+      '</div></div>';
   }
 
   function cardHead(title, note) {
@@ -1317,6 +1461,8 @@ P10.Views = (function () {
     renderManage: renderManage,
     renderDrawer: renderDrawer,
     setRosterSort: setRosterSort,
+    setLeaderMetric: setLeaderMetric,
+    record: record,
     setLineupScenario: setLineupScenario,
     getLineupScenario: function () { return lineupScenario; },
     sortTable: sortTable,

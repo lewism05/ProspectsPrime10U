@@ -1356,3 +1356,138 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   background: rgba(35,44,56,.85);
 }
 .hero-tag-link:focus-visible { outline: 2px solid var(--chrome); outline-offset: 2px; }
+
+/* ==========================================================================
+   LAST GAME
+   ========================================================================== */
+.last-game.win::before  { background: linear-gradient(90deg, var(--good), transparent); opacity: .9; }
+.last-game.loss::before { background: linear-gradient(90deg, var(--bad), transparent); opacity: .9; }
+
+.lg-top { display: flex; align-items: center; gap: 18px; }
+.lg-score {
+  display: flex; align-items: baseline; gap: 5px;
+  font-family: var(--f-display); font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.lg-us   { font-size: 42px; color: var(--text); }
+.lg-dash { font-size: 26px; color: var(--text-3); }
+.lg-them { font-size: 42px; color: var(--text-3); }
+.last-game.win  .lg-us   { color: var(--good); }
+.last-game.loss .lg-them { color: var(--bad); }
+.lg-noscore { font-family: var(--f-display); font-size: 19px; color: var(--text-3); }
+
+.lg-meta { min-width: 0; }
+.lg-result {
+  font-family: var(--f-display); font-size: 18px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .02em; line-height: 1.15;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.lg-rec {
+  font-family: var(--f-display); font-size: 11px; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--text-3); margin-top: 4px;
+}
+
+.lg-arms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.lg-arm {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 10px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-size: 12px; cursor: pointer; transition: border-color .16s;
+}
+.lg-arm:hover { border-color: var(--chrome-dim); }
+.lg-arm b {
+  font-family: var(--f-num); font-size: 11px; font-weight: 500;
+  color: var(--text-3); font-variant-numeric: tabular-nums;
+}
+.lg-note {
+  margin-top: 12px; padding: 9px 12px;
+  background: var(--surface-2); border-left: 2px solid var(--chrome-dim);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+}
+
+/* ==========================================================================
+   AWARDS
+   ========================================================================== */
+.awardgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px; }
+.awardcell {
+  position: relative;
+  padding: 13px 14px 12px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(160deg, var(--surface-3), var(--surface-2));
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: transform .2s var(--ease), border-color .2s;
+}
+.awardcell:hover { transform: translateY(-2px); border-color: var(--chrome-dim); }
+.awardcell.is-mvp {
+  border-color: rgba(255,214,107,.4);
+  background: linear-gradient(160deg, rgba(255,214,107,.10), var(--surface-2));
+}
+.aw-cat {
+  font-family: var(--f-display); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .17em; text-transform: uppercase; color: var(--text-3);
+}
+.awardcell.is-mvp .aw-cat { color: var(--tier-1); }
+.aw-name {
+  font-family: var(--f-display); font-size: 17px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .01em; line-height: 1.1;
+  margin-top: 6px; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.aw-val {
+  font-family: var(--f-num); font-size: 13px; color: var(--chrome);
+  margin-top: 4px; font-variant-numeric: tabular-nums;
+}
+.aw-detail { font-size: 11px; color: var(--text-3); margin-top: 3px; line-height: 1.4; }
+
+/* ==========================================================================
+   DEVELOPMENT SCORE
+   ========================================================================== */
+.devrow {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: background .14s;
+}
+.devrow:last-child { border-bottom: none; }
+.devrow:hover { background: rgba(255,255,255,.028); }
+.dev-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dev-name { font-weight: 600; font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dev-score {
+  font-family: var(--f-display); font-size: 19px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--text-2); flex-shrink: 0;
+}
+.dev-score.good { color: var(--good); }
+.dev-score.warn { color: var(--warn); }
+.dev-score.bad  { color: var(--bad); }
+
+.dev-bar {
+  position: relative;
+  height: 5px; border-radius: var(--r-pill);
+  background: var(--surface-3);
+  margin: 7px 0 5px;
+  overflow: hidden;
+}
+.dev-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  border-radius: var(--r-pill);
+  background: var(--chrome-dim);
+  transition: width .6s var(--ease);
+}
+.dev-fill.good { background: linear-gradient(90deg, var(--good-dim), var(--good)); }
+.dev-fill.warn { background: linear-gradient(90deg, var(--warn-dim), var(--warn)); }
+.dev-fill.bad  { background: linear-gradient(90deg, var(--bad-dim), var(--bad)); }
+/* the 50 line - the whole point of the scale */
+.dev-mid {
+  position: absolute; left: 50%; top: -2px; bottom: -2px;
+  width: 1px; background: rgba(255,255,255,.35);
+}
+.dev-why { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+
+@media (max-width: 720px) {
+  .lg-us, .lg-them { font-size: 34px; }
+  .lg-result { font-size: 16px; }
+  .awardgrid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 8px; }
+  .aw-name { font-size: 15px; }
+}
