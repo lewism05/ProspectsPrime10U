@@ -19,10 +19,21 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/base.css?v=20260829p">
-<link rel="stylesheet" href="css/layout.css?v=20260829p">
-<link rel="stylesheet" href="css/components.css?v=20260829p">
-<link rel="stylesheet" href="css/cards.css?v=20260829p">
+<link rel="stylesheet" href="css/base.css?v=20260829s">
+<link rel="stylesheet" href="css/layout.css?v=20260829s">
+<link rel="stylesheet" href="css/components.css?v=20260829s">
+<link rel="stylesheet" href="css/cards.css?v=20260829s">
+
+<script>
+/* Set the theme before the first paint. Doing this from app.js would show a
+   light-theme reader a dark flash on every single page load. */
+(function () {
+  try {
+    var t = localStorage.getItem('prospects10u_v1_theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
@@ -32,7 +43,7 @@
   <header class="topnav">
     <div class="wrap topnav-inner">
       <a class="brand" href="#" id="brandHome">
-        <img class="brand-mark" src="assets/mark.png" alt="Prospects Prime">
+        <img class="brand-mark" id="brandMark" src="assets/mark.png" alt="Prospects Prime">
         <span class="brand-text">
           <span class="brand-name">Prospects Prime</span>
           <span class="brand-sub">10U Baseball</span>
@@ -46,6 +57,10 @@
         <button class="live-pill" id="livePill" title="Data status - click to refresh">
           <span class="live-dot off" id="liveDot"></span>
           <span class="live-label" id="liveLabel">No data</span>
+        </button>
+        <button class="icon-btn" id="themeBtn" title="Switch theme" aria-label="Switch between light and dark">
+          <svg class="icn-moon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icn-sun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 1.8v2.4M12 19.8v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M1.8 12h2.4M19.8 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -86,13 +101,16 @@
   <!-- Sample-data warning, injected when fake numbers are loaded -->
   <div id="sampleHost"></div>
 
-  <!-- ============================ HERO ============================ -->
+  <!-- ==================== TEAM STRIP ====================
+       The masthead already carries the name on every screen, so this
+       does not say it again - it is a scoreboard, not a second title.
+       ===================================================== -->
   <section class="hero">
     <div class="wrap hero-inner">
-      <img class="hero-logo" src="assets/logo.png" alt="Prospects Prime 10U Baseball">
+      <img class="hero-logo" id="heroLogo" src="assets/logo.png" alt="Prospects Prime 10U Baseball">
       <div class="hero-copy">
+        <h1 class="sr-only">Prospects Prime 10U Baseball</h1>
         <div class="eyebrow" id="heroEyebrow">2026 Season · 10U Travel</div>
-        <h1 class="hero-title">Prospects Prime 10U</h1>
         <div class="hero-meta" id="heroMeta"></div>
       </div>
       <div class="hero-record" id="heroRecord"></div>
@@ -184,7 +202,7 @@
   <footer class="foot">
     <div class="wrap foot-inner">
       <div class="foot-brand">
-        <img src="assets/mark.png" alt="">
+        <img id="footMark" src="assets/mark.png" alt="">
         <span>Prospects Prime 10U Baseball · <span id="footSeason">2026</span></span>
       </div>
       <div id="footMeta"></div>
@@ -222,22 +240,22 @@
 </div>
 
 <!-- Chart.js is vendored locally so the site works with no CDN dependency. -->
-<script src="vendor/chart.umd.min.js?v=20260829p"></script>
-<script src="js/config.js?v=20260829p"></script>
-<script src="js/csv.js?v=20260829p"></script>
-<script src="js/stats.js?v=20260829p"></script>
-<script src="js/store.js?v=20260829p"></script>
-<script src="js/drills.js?v=20260829p"></script>
-<script src="js/insights.js?v=20260829p"></script>
-<script src="js/lineup.js?v=20260829p"></script>
-<script src="js/schedule.js?v=20260829p"></script>
-<script src="js/gamelog.js?v=20260829p"></script>
-<script src="js/progress.js?v=20260829p"></script>
-<script src="js/charts.js?v=20260829p"></script>
-<script src="js/views.js?v=20260829p"></script>
-<script src="js/matchup.js?v=20260829p"></script>
-<script src="js/myplayer.js?v=20260829p"></script>
-<script src="js/cards.js?v=20260829p"></script>
-<script src="js/app.js?v=20260829p"></script>
+<script src="vendor/chart.umd.min.js?v=20260829s"></script>
+<script src="js/config.js?v=20260829s"></script>
+<script src="js/csv.js?v=20260829s"></script>
+<script src="js/stats.js?v=20260829s"></script>
+<script src="js/store.js?v=20260829s"></script>
+<script src="js/drills.js?v=20260829s"></script>
+<script src="js/insights.js?v=20260829s"></script>
+<script src="js/lineup.js?v=20260829s"></script>
+<script src="js/schedule.js?v=20260829s"></script>
+<script src="js/gamelog.js?v=20260829s"></script>
+<script src="js/progress.js?v=20260829s"></script>
+<script src="js/charts.js?v=20260829s"></script>
+<script src="js/views.js?v=20260829s"></script>
+<script src="js/matchup.js?v=20260829s"></script>
+<script src="js/myplayer.js?v=20260829s"></script>
+<script src="js/cards.js?v=20260829s"></script>
+<script src="js/app.js?v=20260829s"></script>
 </body>
 </html>

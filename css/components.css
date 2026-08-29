@@ -1613,3 +1613,21 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   .mp-dev-score { font-size: 38px; }
   .mp-stats { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Theme toggle: show the icon for what you'd switch TO, not what you're on */
+#themeBtn .icn-sun  { display: block; }
+#themeBtn .icn-moon { display: none; }
+:root[data-theme="light"] #themeBtn .icn-sun  { display: none; }
+:root[data-theme="light"] #themeBtn .icn-moon { display: block; }
+
+/* The masthead already carries the team name, so the strip below is a
+   scoreboard rather than a second title. Without the headline it can be
+   considerably shorter. */
+.hero-inner { padding: 18px 20px 16px; gap: 22px; }
+.hero-logo { height: 72px; }
+.hero-copy .eyebrow { margin-bottom: 10px; display: block; }
+
+@media (max-width: 860px) {
+  .hero-inner { padding: 14px 14px 12px; }
+  .hero-logo { height: 54px; }
+}

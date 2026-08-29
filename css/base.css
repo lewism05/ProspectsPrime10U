@@ -206,3 +206,127 @@ p:last-child { margin-bottom: 0; }
   .topnav, .subnav, .fab, .drawer-scrim, .no-print { display: none !important; }
   .card { break-inside: avoid; border-color: #ccc; }
 }
+
+/* ==========================================================================
+   LIGHT THEME
+   Not an inversion. A flipped dark palette produces muddy greys and an
+   accent that disappears, so every token is picked again for paper.
+
+   The chrome gradient is the biggest change: brushed silver reads as
+   premium on black and as nothing at all on white, so on light it becomes
+   graphite. Semantic colours darken for the same reason - the greens and
+   ambers that glow on black fail contrast on paper.
+   ========================================================================== */
+:root[data-theme="light"] {
+  --bg:            #F1F3F6;
+  --bg-grad:       radial-gradient(1200px 620px at 50% -12%, #FFFFFF 0%, #EBEEF2 60%);
+  --surface:       #FFFFFF;
+  --surface-2:     #F6F8FA;
+  --surface-3:     #ECEFF3;
+  --surface-hi:    #E1E6EC;
+
+  --line:          #E3E7ED;
+  --line-soft:     #EDF0F4;
+  --line-strong:   #C7CFDA;
+
+  --text:          #101620;
+  --text-2:        #48525F;
+  --text-3:        #737E8C;
+  --text-inverse:  #FFFFFF;
+
+  --chrome:        #2B3542;
+  --chrome-dim:    #64707F;
+  --chrome-grad:   linear-gradient(160deg, #48545F 0%, #26313D 34%, #10161E 70%, #3B4753 100%);
+  --chrome-line:   linear-gradient(90deg, transparent, #9AA5B2 22%, #4A5563 50%, #9AA5B2 78%, transparent);
+
+  --good:          #1B7A47;
+  --good-dim:      #A9DCC0;
+  --good-bg:       rgba(27,122,71,.09);
+  --warn:          #8A5A05;
+  --warn-dim:      #F0D49A;
+  --warn-bg:       rgba(138,90,5,.10);
+  --bad:           #B02525;
+  --bad-dim:       #F2B9B9;
+  --bad-bg:        rgba(176,37,37,.08);
+  --info:          #1667A8;
+  --info-bg:       rgba(22,103,168,.09);
+
+  --tier-1:        #8A6100;
+  --tier-2:        #2E5C86;
+  --tier-3:        #4B3E8A;
+
+  --sh-1: 0 1px 2px rgba(16,22,32,.06);
+  --sh-2: 0 2px 10px rgba(16,22,32,.09);
+  --sh-3: 0 18px 44px -14px rgba(16,22,32,.22);
+}
+
+/* Elements that assumed a dark ground need help on paper. */
+:root[data-theme="light"] .topnav {
+  background: rgba(255,255,255,.86);
+}
+:root[data-theme="light"] .subnav {
+  background: rgba(246,248,250,.92);
+}
+:root[data-theme="light"] .hero {
+  background: linear-gradient(180deg, #FFFFFF 0%, rgba(241,243,246,0) 100%);
+}
+:root[data-theme="light"] .hero::before {
+  background-image: repeating-linear-gradient(115deg, rgba(16,22,32,.022) 0 1px, transparent 1px 5px);
+}
+:root[data-theme="light"] .rooms { background: rgba(16,22,32,.05); }
+:root[data-theme="light"] .seg   { background: var(--surface-2); }
+
+/* Hero pills were dark chips with light text. On paper they invert. */
+:root[data-theme="light"] .hero-tag {
+  background: rgba(255,255,255,.9);
+  border-color: var(--line-strong);
+  color: var(--text-2);
+}
+:root[data-theme="light"] .hero-tag-link:hover {
+  background: #FFFFFF;
+  border-color: var(--chrome-dim);
+}
+/* A shadow tuned for a black ground turns the logo into a smudge on white. */
+:root[data-theme="light"] .hero-logo {
+  filter: drop-shadow(0 6px 16px rgba(16,22,32,.18));
+}
+
+/* The jersey patch stays dark in both themes - it reads as a uniform number,
+   not as page furniture - so its digits keep a light fill. */
+:root[data-theme="light"] .pcard-num,
+:root[data-theme="light"] .mp-num,
+:root[data-theme="light"] .pickcard-num { color: #C8D2DE; }
+:root[data-theme="light"] table.stat tbody tr:hover td.stick { background: var(--surface-3); }
+
+/* A mid-grey fill on a pale track is invisible. Darken the bar and give the
+   50-marker a tone that survives both the filled and unfilled side. */
+:root[data-theme="light"] .dev-fill { background: var(--chrome); }
+:root[data-theme="light"] .dev-mid { background: var(--text-3); }
+
+/* A disabled dark button fades toward the page instead of away from it,
+   so it needs a little more opacity on paper to stay readable. */
+:root[data-theme="light"] .btn:disabled { opacity: .46; }
+
+/* Overlay scrims and hover states that assumed white-on-black. */
+:root[data-theme="light"] .drawer-close { background: var(--surface-2); }
+:root[data-theme="light"] .drawer-close:hover { color: var(--text); }
+:root[data-theme="light"] .pc-add { background: rgba(255,255,255,.55); }
+@media (max-width: 720px) {
+  :root[data-theme="light"] .subnav { background: rgba(255,255,255,.98); }
+}
+
+/* The card keeps its own dark world in both themes - a trading card is a
+   physical object, not part of the page chrome. */
+:root[data-theme="light"] .bbface {
+  box-shadow:
+    0 0 0 1px rgba(16,22,32,.10),
+    0 2px 5px rgba(16,22,32,.10),
+    0 20px 44px -18px rgba(16,22,32,.35);
+}
+:root[data-theme="light"] .card-drop {
+  background: radial-gradient(ellipse at center, rgba(16,22,32,.34) 0%, rgba(16,22,32,0) 72%);
+}
+:root[data-theme="light"] .card-impact { border-color: rgba(16,22,32,.28); }
+
+/* Charts read their colours from JS, so they are told about the switch
+   separately - see P10.Charts.refreshTheme(). */

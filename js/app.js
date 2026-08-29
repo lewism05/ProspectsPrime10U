@@ -171,6 +171,48 @@
       : '';
   }
 
+
+  /* ==================================================================
+     THEME
+     Applied before first paint (see the inline script in index.html) so
+     a light-theme reader never gets a dark flash on load.
+     ================================================================== */
+  var THEME_KEY = C.ns + '_theme';
+
+  function currentTheme() {
+    try { return localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) { return 'dark'; }
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+
+    // The mark has enough black in it to vanish on paper, so each theme
+    // gets the artwork drawn for it.
+    var light = theme === 'light';
+    var bm = $('brandMark'), hl = $('heroLogo'), fm = $('footMark');
+    if (bm) bm.src = light ? 'assets/mark-light.png' : 'assets/mark.png';
+    if (hl) hl.src = light ? 'assets/mark-light.png' : 'assets/logo.png';
+    if (fm) fm.src = light ? 'assets/mark-light.png' : 'assets/mark.png';
+
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', light ? '#F1F3F6' : '#07090C');
+
+    var btn = $('themeBtn');
+    if (btn) btn.title = light ? 'Switch to dark' : 'Switch to light';
+
+    // Charts hold their palette in JS, so they have to be told and redrawn.
+    if (P10.Charts.refreshTheme) P10.Charts.refreshTheme();
+    if (Store.state.ready) renderTab(currentTab);
+  }
+
+  var themeBtn = $('themeBtn');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+    });
+  }
+
   /* ==================================================================
      NAV
      ================================================================== */
@@ -825,6 +867,7 @@
   });
 
   renderAll();
+  applyTheme(currentTheme());
   goTab(currentTab, { noScroll: true });
 
   // Weather in the background - the schedule and dashboard re-render when it lands

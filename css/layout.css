@@ -392,20 +392,37 @@
   .coach-chip { padding: 0 8px; font-size: 11px; }
 }
 
-@media (max-width: 420px) {
-  .brand-name { font-size: 16px; }
+/* The masthead carries five controls on a phone once the theme toggle is in
+   (coach chip, data pill, theme, settings, menu). The brand is the thing that
+   yields - the logo alone identifies the app - so it shrinks and the controls
+   stay on screen instead of the menu button sliding off the right edge. */
+@media (max-width: 460px) {
+  .brand { flex-shrink: 1; min-width: 0; }
+  /* Two short lines beat one clipped one - the name stays whole. */
+  .brand-name { font-size: 13px; letter-spacing: .02em; white-space: normal; line-height: 1.05; }
+  .brand-sub { display: none; }
   .brand-mark { height: 30px; }
   .topnav-inner { gap: 8px; }
-  .topnav-actions { gap: 6px; }
-  .coach-chip { width: 30px; padding: 0; overflow: hidden; text-indent: -99px; }
-  .coach-chip::after {
-    content: '🔑';
-    text-indent: 0;
-    position: absolute;
-    width: 30px;
-    text-align: center;
-    font-size: 13px;
-  }
+  .topnav-actions { gap: 5px; }
+  .icon-btn { width: 30px; height: 30px; }
+  .nav-toggle { width: 32px; height: 30px; }
+  /* A key glyph in the masthead is the sort of thing the rest of this build
+     took out. The chip collapses to its initial instead. */
+  .coach-chip { width: 28px; padding: 0; justify-content: center; letter-spacing: 0; overflow: hidden; }
+  .coach-chip { font-size: 0; }
+  .coach-chip::after { content: 'C'; font-size: 12px; letter-spacing: .04em; }
+}
+
+@media (max-width: 380px) {
+  .brand-name { font-size: 12px; }
+  .brand { gap: 8px; }
+  .brand-mark { height: 26px; }
+}
+
+/* Below this the wordmark cannot fit without breaking a word. The mark on
+   its own is the identity at that size, so the text steps aside. */
+@media (max-width: 340px) {
+  .brand-text { display: none; }
 }
 
 /* ==========================================================================

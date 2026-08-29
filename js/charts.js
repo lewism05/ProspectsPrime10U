@@ -11,6 +11,9 @@ P10.Charts = (function () {
   var S = P10.Stats;
   var instances = {};
 
+  /* Chart colours live in JS, so they cannot inherit the theme from CSS.
+     They are read out of the custom properties instead and refreshed
+     whenever the theme changes. */
   var COLOR = {
     chrome:  '#C9CFD6',
     chromeD: '#8B95A2',
@@ -19,9 +22,44 @@ P10.Charts = (function () {
     bad:     '#FF6B6B',
     info:    '#57B6FF',
     grid:    'rgba(255,255,255,.055)',
+    barA:    'rgba(87,182,255,.72)',
+    barB:    'rgba(201,207,214,.72)',
+    fillSoft:'rgba(201,207,214,.10)',
+    fillUp:  'rgba(61,220,145,.12)',
+    fillDown:'rgba(255,107,107,.12)',
     text:    '#A9B4C2',
     textDim: '#6B7686'
   };
+
+  function readVar(name, fallback) {
+    try {
+      var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return v || fallback;
+    } catch (e) { return fallback; }
+  }
+
+  function refreshTheme() {
+    var light = document.documentElement.getAttribute('data-theme') === 'light';
+    COLOR.chrome  = readVar('--chrome', COLOR.chrome);
+    COLOR.chromeD = readVar('--chrome-dim', COLOR.chromeD);
+    COLOR.good    = readVar('--good', COLOR.good);
+    COLOR.warn    = readVar('--warn', COLOR.warn);
+    COLOR.bad     = readVar('--bad', COLOR.bad);
+    COLOR.info    = readVar('--info', COLOR.info);
+    COLOR.text    = readVar('--text-2', COLOR.text);
+    COLOR.textDim = readVar('--text-3', COLOR.textDim);
+    COLOR.grid    = light ? 'rgba(16,22,32,.08)' : 'rgba(255,255,255,.055)';
+    COLOR.tipBg   = light ? 'rgba(255,255,255,.98)' : 'rgba(10,13,18,.96)';
+    COLOR.tipLine = light ? 'rgba(16,22,32,.12)' : 'rgba(255,255,255,.12)';
+    COLOR.tipText = readVar('--text', light ? '#101620' : '#F4F7FA');
+    COLOR.point   = readVar('--surface', light ? '#FFFFFF' : '#0E1218');
+    // Series fills were mixed for a black ground; on paper a pale bar is no bar.
+    COLOR.barA     = light ? 'rgba(22,103,168,.78)'  : 'rgba(87,182,255,.72)';
+    COLOR.barB     = light ? 'rgba(100,112,127,.55)' : 'rgba(201,207,214,.72)';
+    COLOR.fillSoft = light ? 'rgba(16,22,32,.06)'    : 'rgba(201,207,214,.10)';
+    COLOR.fillUp   = light ? 'rgba(27,122,71,.12)'   : 'rgba(61,220,145,.12)';
+    COLOR.fillDown = light ? 'rgba(176,37,37,.10)'   : 'rgba(255,107,107,.12)';
+  }
 
   function ready() { return typeof Chart !== 'undefined'; }
 
@@ -37,11 +75,11 @@ P10.Charts = (function () {
           labels: { color: COLOR.text, font: { family: 'Inter', size: 11 }, boxWidth: 10, boxHeight: 10, usePointStyle: true }
         },
         tooltip: {
-          backgroundColor: 'rgba(10,13,18,.96)',
-          borderColor: 'rgba(255,255,255,.12)',
+          backgroundColor: COLOR.tipBg || 'rgba(10,13,18,.96)',
+          borderColor: COLOR.tipLine || 'rgba(255,255,255,.12)',
           borderWidth: 1,
-          titleColor: '#F4F7FA',
-          bodyColor: '#A9B4C2',
+          titleColor: COLOR.tipText || '#F4F7FA',
+          bodyColor: COLOR.text,
           titleFont: { family: 'Inter', size: 12, weight: '600' },
           bodyFont: { family: 'Roboto Mono', size: 11 },
           padding: 10,
@@ -127,10 +165,10 @@ P10.Charts = (function () {
           label: 'Team OPS',
           data: [trend.season, trend.l8, trend.l4],
           borderColor: COLOR.chrome,
-          backgroundColor: 'rgba(201,207,214,.10)',
+          backgroundColor: COLOR.fillSoft,
           borderWidth: 2.5,
           pointRadius: 5,
-          pointBackgroundColor: '#0E1218',
+          pointBackgroundColor: COLOR.point || '#0E1218',
           pointBorderColor: COLOR.chrome,
           pointBorderWidth: 2.5,
           pointHoverRadius: 7,
@@ -213,13 +251,13 @@ P10.Charts = (function () {
           {
             label: 'OBP',
             data: rows.map(function (p) { return p.bat.obp; }),
-            backgroundColor: 'rgba(87,182,255,.72)',
+            backgroundColor: COLOR.barA,
             borderRadius: 3, borderSkipped: false
           },
           {
             label: 'SLG',
             data: rows.map(function (p) { return p.bat.slg; }),
-            backgroundColor: 'rgba(201,207,214,.72)',
+            backgroundColor: COLOR.barB,
             borderRadius: 3, borderSkipped: false
           }
         ]
@@ -270,7 +308,7 @@ P10.Charts = (function () {
             backgroundColor: COLOR.warn,
             borderWidth: 2,
             pointRadius: 4,
-            pointBackgroundColor: '#0E1218',
+            pointBackgroundColor: COLOR.point || '#0E1218',
             pointBorderWidth: 2,
             tension: .3,
             yAxisID: 'y1', order: 1
@@ -328,7 +366,7 @@ P10.Charts = (function () {
           },
           pointRadius: 7,
           pointHoverRadius: 10,
-          borderColor: '#0E1218',
+          borderColor: COLOR.point || '#0E1218',
           borderWidth: 1.5
         }]
       },
@@ -376,10 +414,10 @@ P10.Charts = (function () {
         datasets: [{
           data: [s, l8, l4],
           borderColor: rising ? COLOR.good : COLOR.bad,
-          backgroundColor: rising ? 'rgba(61,220,145,.12)' : 'rgba(255,107,107,.12)',
+          backgroundColor: rising ? COLOR.fillUp : COLOR.fillDown,
           borderWidth: 2.5,
           pointRadius: 4,
-          pointBackgroundColor: '#0E1218',
+          pointBackgroundColor: COLOR.point || '#0E1218',
           pointBorderColor: rising ? COLOR.good : COLOR.bad,
           pointBorderWidth: 2,
           fill: true,
@@ -430,6 +468,7 @@ P10.Charts = (function () {
   return {
     COLOR: COLOR,
     ready: ready,
+    refreshTheme: refreshTheme,
     destroy: destroy,
     destroyAll: destroyAll,
     teamTrend: teamTrend,
