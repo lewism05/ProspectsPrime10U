@@ -127,11 +127,43 @@ P10.Store = (function () {
     if (added) {
       state.meta.updatedAt = new Date().toISOString();
       state.meta.source = 'upload';
+      delete state.meta.sample;
       persist();
       recompute();
       emit('ingest');
     }
     return added;
+  }
+
+  /* Sample data is flagged in meta so the app can shout about it. It clears
+     with the same Clear Data button as anything else. */
+  function isSample() { return !!(state.meta && state.meta.sample); }
+
+  function loadSample() {
+    var files = [
+      'SAMPLE_Prospects10U_Season.csv',
+      'SAMPLE_Prospects10U_Last8.csv',
+      'SAMPLE_Prospects10U_Last4.csv'
+    ];
+    return Promise.all(files.map(function (name) {
+      return fetch('sample/' + name + '?t=' + Date.now())
+        .then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (text) {
+          if (!text) return null;
+          var g = P10.CSV.categorize(name);
+          return { name: name, text: text, category: g.category, window: g.window };
+        })
+        .catch(function () { return null; });
+    })).then(function (results) {
+      var good = results.filter(Boolean);
+      if (!good.length) throw new Error('Sample files could not be loaded.');
+      var added = ingest(good);
+      state.meta.sample = true;
+      state.meta.source = 'sample';
+      persist();
+      emit('sample');
+      return added;
+    });
   }
 
   function clearData() {
@@ -229,6 +261,8 @@ P10.Store = (function () {
     saveLineups: saveLineups,
     saveGameState: saveGameState,
     recompute: recompute,
+    isSample: isSample,
+    loadSample: loadSample,
     exportBundle: exportBundle,
     download: download,
     importBundle: importBundle,

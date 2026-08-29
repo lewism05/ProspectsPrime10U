@@ -147,7 +147,10 @@ P10.CSV = (function () {
     bb:   ['bb', 'walks', 'base on balls'],
     hbp:  ['hbp', 'hit by pitch'],
     sb:   ['sb', 'stolen bases', 'steals'],
-    qab:  ['qab', 'qab%', 'quality at bats', 'quality ab'],
+    // QAB and QAB% are two different columns. GameChanger exports both:
+    // QAB is a raw count, QAB% is the rate. Never let one match the other.
+    qab:    ['qab', 'quality at bats', 'quality ab'],
+    qabPct: ['qab%', 'qab %', 'quality at bat %'],
     hardHit: ['hard hit', 'hard hit %', 'hh%', 'hhb'],
 
     // pitching
@@ -173,10 +176,19 @@ P10.CSV = (function () {
     position:['pos', 'position', 'primary position', 'positions'],
 
     // catching
+    // NOTE: GameChanger files these under the FIELDING section, not a
+    // catching section. P10.Stats.catching() looks in both.
     pb:  ['pb', 'passed balls'],
     cs:  ['cs', 'caught stealing', 'cs against'],
     sba: ['sb', 'sba', 'stolen bases allowed', 'sb against'],
-    csPct: ['cs%', 'caught stealing %']
+    csPct: ['cs%', 'caught stealing %'],
+    sbatt: ['sb-att', 'sb att', 'sb/att', 'stolen base attempts'],
+
+    // Innings played at each position (fielding section). This is how
+    // GameChanger conveys position - there is no POS column.
+    innP:  ['p'],   innC:  ['c'],   inn1B: ['1b'],  inn2B: ['2b'],
+    inn3B: ['3b'],  innSS: ['ss'],  innLF: ['lf'],  innCF: ['cf'],
+    innRF: ['rf'],  innDH: ['dh'],  innTotal: ['total']
   };
 
   /* ----------------------------------------------------------------
@@ -299,7 +311,15 @@ P10.CSV = (function () {
         findCol(headers, 'whip', 'pitching')) found.pitching = true;
     if (findCol(headers, 'fpct', 'fielding') || findCol(headers, 'chances', 'fielding') ||
         findCol(headers, 'putouts', 'fielding')) found.fielding = true;
-    if (findCol(headers, 'pb', 'catching') || findCol(headers, 'csPct', 'catching')) found.catching = true;
+
+    /* Catching columns live in the FIELDING section of a GameChanger export.
+       Checking only a 'catching' section means catcher stats are silently
+       dropped from every real export. */
+    if (findCol(headers, 'pb', 'catching') || findCol(headers, 'csPct', 'catching') ||
+        findCol(headers, 'sbatt', 'catching') ||
+        findCol(headers, 'pb', 'fielding') || findCol(headers, 'sbatt', 'fielding') ||
+        findCol(headers, 'csPct', 'fielding')) found.catching = true;
+
     return Object.keys(found);
   }
 

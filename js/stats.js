@@ -72,7 +72,24 @@ P10.Stats = (function () {
       ops: ops || 0,
       kRate: denom ? (k || 0) / denom : 0,
       bbRate: denom ? (bb || 0) / denom : 0,
-      qab: (function () { var c = find(h, 'qab', 'batting'); return c ? pctv(row[c]) : null; })()
+
+      /* QAB count and QAB rate are separate columns. Read the rate from
+         QAB%, and only fall back to count/PA if the rate is absent —
+         never treat the raw count as a percentage. */
+      qabCount: (function () {
+        var c = find(h, 'qab', 'batting');
+        return c ? n(row[c]) : null;
+      })(),
+      qab: (function () {
+        var c = find(h, 'qabPct', 'batting');
+        if (c) {
+          var v = pctv(row[c]);
+          if (v !== null) return v;
+        }
+        var cc = find(h, 'qab', 'batting');
+        var cnt = cc ? n(row[cc]) : null;
+        return (cnt !== null && denom) ? cnt / denom : null;
+      })()
     };
   }
 
@@ -117,6 +134,29 @@ P10.Stats = (function () {
     };
   }
 
+  /* Positions, in the order a scorecard lists them. */
+  var POS_KEYS = [
+    ['innP', 'P'], ['innC', 'C'], ['inn1B', '1B'], ['inn2B', '2B'],
+    ['inn3B', '3B'], ['innSS', 'SS'], ['innLF', 'LF'], ['innCF', 'CF'],
+    ['innRF', 'RF'], ['innDH', 'DH']
+  ];
+
+  /* GameChanger has no POS column. It reports innings played at every
+     position instead, in baseball notation (40.1 = 40 and 1/3). Reading
+     those gives a real primary and secondary position plus the workload
+     behind it, which is better data than a position label. */
+  function positionsFromInnings(row, h) {
+    var out = [];
+    POS_KEYS.forEach(function (pk) {
+      var col = find(h, pk[0], 'fielding');
+      if (!col) return;
+      var inn = CSV.innings(row[col]);
+      if (inn && inn > 0) out.push({ pos: pk[1], innings: inn });
+    });
+    out.sort(function (a, b) { return b.innings - a.innings; });
+    return out;
+  }
+
   function fielding(row, h) {
     var g = function (k) { var c = find(h, k, 'fielding'); return c ? n(row[c]) : null; };
 
@@ -127,8 +167,20 @@ P10.Stats = (function () {
     if (tc === null && (po !== null || a !== null || e !== null)) tc = (po || 0) + (a || 0) + (e || 0);
     if (fpct === null && tc) fpct = ((po || 0) + (a || 0)) / tc;
 
+    // An explicit position column if the export happens to have one...
     var posCol = find(h, 'position', 'fielding') || find(h, 'position');
     var pos = posCol ? String(row[posCol] || '').trim() : '';
+
+    // ...otherwise derive it from innings played, which is what
+    // GameChanger actually gives us.
+    var byInnings = positionsFromInnings(row, h);
+    if (!pos && byInnings.length) pos = byInnings[0].pos;
+
+    var innTotalCol = find(h, 'innTotal', 'fielding');
+    var innTotal = innTotalCol ? CSV.innings(row[innTotalCol]) : null;
+    if (!innTotal && byInnings.length) {
+      innTotal = byInnings.reduce(function (s, x) { return s + x.innings; }, 0);
+    }
 
     if (e === null && tc === null && !pos) return null;
 
@@ -140,21 +192,61 @@ P10.Stats = (function () {
       dp: g('dp') || 0,
       fpct: fpct === null ? 0 : fpct,
       errRate: tc ? (e || 0) / tc : 0,
-      position: pos
+      position: pos,
+      positions: byInnings,
+      secondary: byInnings.length > 1 ? byInnings[1].pos : '',
+      innings: innTotal || 0
     };
   }
 
+  /* Catching stats live in the FIELDING section of a GameChanger export,
+     not a catching section. Try a real catching section first (other
+     exports use one), then fall back to fielding.
+
+     Section matters here more than anywhere else in the parser: SB appears
+     three times with three meanings. batting.SB is what the player stole,
+     pitching.SB is what he allowed on the mound, fielding.SB is what he
+     allowed behind the plate. Only the last one belongs here. */
   function catching(row, h) {
-    var g = function (k) { var c = find(h, k, 'catching'); return c ? n(row[c]) : null; };
-    var pb = g('pb'), cs = g('cs'), sba = g('sba');
-    var csPctCol = find(h, 'csPct', 'catching');
-    var csPct = csPctCol ? pctv(row[csPctCol]) : null;
-    if (csPct === null && (cs !== null || sba !== null)) {
-      var att = (cs || 0) + (sba || 0);
+    function pick(key) {
+      var c = find(h, key, 'catching');
+      if (c) return { col: c, sec: 'catching' };
+      c = find(h, key, 'fielding');
+      if (c) return { col: c, sec: 'fielding' };
+      return null;
+    }
+    function val(key) { var p = pick(key); return p ? n(row[p.col]) : null; }
+
+    var pb = val('pb'), cs = val('cs'), sba = val('sba');
+
+    // "SB-ATT" arrives as a combined string like "86-95" (allowed-attempts).
+    var attTotal = null;
+    var attPick = pick('sbatt');
+    if (attPick) {
+      var raw = String(row[attPick.col] || '').trim();
+      var m = /^(\d+)\s*-\s*(\d+)$/.exec(raw);
+      if (m) {
+        sba = sba === null ? parseInt(m[1], 10) : sba;
+        attTotal = parseInt(m[2], 10);
+        if (cs === null) cs = attTotal - parseInt(m[1], 10);
+      }
+    }
+
+    var csPctPick = pick('csPct');
+    var csPct = csPctPick ? pctv(row[csPctPick.col]) : null;
+    if (csPct === null) {
+      var att = attTotal !== null ? attTotal : (cs || 0) + (sba || 0);
       csPct = att ? (cs || 0) / att : null;
     }
-    if (pb === null && cs === null && sba === null) return null;
-    return { pb: pb || 0, cs: cs || 0, sba: sba || 0, csPct: csPct === null ? 0 : csPct };
+
+    if (!pb && !cs && !sba) return null;
+    return {
+      pb: pb || 0,
+      cs: cs || 0,
+      sba: sba || 0,
+      attempts: attTotal !== null ? attTotal : (cs || 0) + (sba || 0),
+      csPct: csPct === null ? 0 : csPct
+    };
   }
 
   /* ==================================================================
@@ -260,9 +352,12 @@ P10.Stats = (function () {
 
       p.hasData = !!(p.bat || p.pit || p.fld || p.cat);
       p.isPitcher = !!(p.pitSeason && p.pitSeason.ip > 0);
-      p.isCatcher = !!(p.cat && (p.cat.pb > 0 || p.cat.cs > 0 || p.cat.sba > 0));
+      p.isCatcher = !!(p.cat && (p.cat.pb > 0 || p.cat.cs > 0 || p.cat.sba > 0)) ||
+                    !!(p.fld && p.fld.position === 'C');
 
       p.position = (p.fld && p.fld.position) || p.cfgPos || '';
+      p.secondary = (p.fld && p.fld.secondary) || meta.alt || '';
+      p.positions = (p.fld && p.fld.positions) || [];
 
       /* ---- trend: OPS now vs season ---- */
       var cur = p.bat && p.bat.ops || 0;
@@ -413,8 +508,20 @@ P10.Stats = (function () {
 
     var era = ip ? (er * 6) / ip : (pit.length ? sum(pit, function (p) { return p.pit.era; }) / pit.length : 0);
     var whip = ip ? (pbb + ph) / ip : (pit.length ? sum(pit, function (p) { return p.pit.whip; }) / pit.length : 0);
-    var strikePct = pitches ? strikes / pitches
-      : (pit.length ? sum(pit, function (p) { return p.pit.strike; }) / pit.length : 0);
+
+    /* GameChanger exports S% but no raw strike count, so summing strikes
+       gives zero even when every pitcher has a strike rate. Fall back to an
+       innings-weighted mean of the per-pitcher rates. */
+    var strikePct = 0;
+    if (pitches && strikes) {
+      strikePct = strikes / pitches;
+    } else {
+      var wsum = 0, wtot = 0;
+      pit.forEach(function (p) {
+        if (p.pit.strike > 0) { wsum += p.pit.strike * p.pit.ip; wtot += p.pit.ip; }
+      });
+      strikePct = wtot ? wsum / wtot : 0;
+    }
 
     var e = sum(fld, function (p) { return p.fld.e; });
     var tc = sum(fld, function (p) { return p.fld.tc; });
@@ -456,11 +563,11 @@ P10.Stats = (function () {
   function describeRole(p) {
     var bits = [];
     if (p.position) bits.push(p.position);
-    if (p.isPitcher) {
+    if (p.secondary && p.secondary !== p.position) bits.push(p.secondary);
+    if (p.isPitcher && bits.indexOf('P') < 0) {
       var ip = p.pitSeason.ip;
       bits.push(ip >= 12 ? 'Starter' : ip >= 5 ? 'Reliever' : 'Spot Arm');
     }
-    if (p.isCatcher && bits.indexOf('C') < 0) bits.push('Catcher');
     if (!bits.length) bits.push(p.hasData ? 'Position Player' : 'Roster');
     return bits.join(' · ');
   }

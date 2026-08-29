@@ -62,7 +62,12 @@ P10.CONFIG = {
       // strikeout rate: LOWER is better (inverted)
       kRate: { elite: .08, good: .15, avg: .24, watch: .34, invert: true },
       // walk rate: higher is better
-      bbRate: { elite: .22, good: .15, avg: .09, watch: .05 }
+      bbRate: { elite: .22, good: .15, avg: .09, watch: .05 },
+      /* Quality At Bat rate. GameChanger computes this and it is the best
+         single number at this age: it credits a hard-hit out, an 8-pitch
+         at-bat, a walk, moving a runner over. Rewards process over result.
+         Benchmarks are for competitive travel ball, 10U-14U. */
+      qab: { elite: .58, good: .50, avg: .42, watch: .34 }
     },
     pitching: {
       // ERA: LOWER is better (inverted)

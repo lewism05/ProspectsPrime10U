@@ -104,6 +104,37 @@ columns work, and `Last, First` ordering is handled too.
 Only the Season files are required. Last 8 and Last 4 unlock the stat-window
 toggle and the hot/cold trend arrows.
 
+### Trying it before real stats exist
+
+**Manage > Load Sample Data** fills every screen with made-up numbers in one
+click. A loud striped banner sits at the top of the page the whole time it is
+on, and **Clear It** (or Clear All Data) removes it completely.
+
+Jackson's line in the sample is carried over from his real 9U season. The other
+eight are invented. The files live in `sample/` in the real 174-column
+GameChanger format, so loading them exercises the same parser your real export
+will hit.
+
+Delete the `sample/` folder before you hand the link out if you would rather it
+not be reachable at all.
+
+### Player cards
+
+Clicking any player anywhere - a roster card, a table row, a leaderboard - opens
+their baseball card. It spins in once, then sits there. **Flip Card** turns it
+over to a full stat back: batting, pitching, fielding, innings by position, and
+a short scouting line generated from what the numbers actually say.
+
+**Photos.** Any parent can add a photo to a card. It is downscaled and
+compressed in the browser (a 4MB phone photo becomes about 60-90KB) and saved in
+that browser's local storage.
+
+Be clear with families about what that means: **a photo lives on the device that
+added it.** It is not uploaded anywhere, it is not visible to other families,
+and it does not follow them to another phone. Storing photos centrally would
+need a server, which this app deliberately does not have. Clearing browser data
+removes them.
+
 ### Getting stats to everyone else
 
 Uploading only changes **your** browser. To push numbers to parents and players:
@@ -182,9 +213,11 @@ css/
   base.css            design tokens, typography, reset
   layout.css          shell, nav, hero, grids, responsive
   components.css      cards, tables, badges, drawer, modals
+  cards.css           the baseball card itself
 js/
   config.js           ROSTER, SCHEDULE, BENCHMARKS, PASSCODE  <- edit this one
   csv.js              GameChanger CSV parser + column matching
+  cards.js            baseball card: spin, flip, photo upload
   stats.js            stat extraction, player build, tiers, ranks
   store.js            state, localStorage, publish/load
   insights.js         weakness detection, achievements, team focus
@@ -202,6 +235,11 @@ To test with fake data before your real stats are ready, upload the files in
 ---
 
 ## Troubleshooting
+
+**A parent lost their photo.** Photos live in one browser's local storage.
+Clearing browsing data, switching phones or using a private window all lose
+them. Re-adding takes ten seconds. This is a limitation of having no server, not
+a bug.
 
 **A player shows no stats.** Their name in GameChanger does not match
 `js/config.js`. The matcher handles `Last, First`, suffixes like Jr., and

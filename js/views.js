@@ -66,6 +66,18 @@ P10.Views = (function () {
   /* ==================================================================
      HERO + STAT BAR
      ================================================================== */
+  /* A loud, unmissable banner whenever the numbers on screen are fake.
+     Nobody should ever mistake sample data for their kid's real season. */
+  function sampleBanner(st) {
+    if (!P10.Store.isSample()) return '';
+    return '<div class="sample-banner" id="sampleBanner">' +
+      '<span class="sb-dot"></span>' +
+      '<span class="sb-text"><strong>Sample data.</strong> These are made-up numbers for testing. ' +
+      'Nothing here is real.</span>' +
+      '<button class="btn btn-sm btn-danger" id="clearSample">Clear It</button>' +
+      '</div>';
+  }
+
   function renderHero(st) {
     var t = st.team;
     var meta = [];
@@ -340,7 +352,9 @@ P10.Views = (function () {
 
     var s1, s2, s3, l1, l2, l3;
     if (p.hasData && b.ops > 0) {
-      s1 = S.rate(b.avg); l1 = 'AVG';
+      // QAB% leads when we have it - it is the most honest number at 10U.
+      if (b.qab) { s1 = Math.round(b.qab * 100) + '%'; l1 = 'QAB'; }
+      else { s1 = S.rate(b.avg); l1 = 'AVG'; }
       s2 = S.rate(b.obp); l2 = 'OBP';
       s3 = S.rate(b.ops); l3 = 'OPS';
     } else if (p.pit && p.pit.ip > 0) {
@@ -438,6 +452,9 @@ P10.Views = (function () {
         render: function (p) { return colored(S.rate(p.bat.slg), S.grade('batting', 'slg', p.bat.slg)); } },
       { key: 'ops', label: 'OPS', title: 'OBP + SLG', val: function (p) { return p.bat.ops; },
         render: function (p) { return '<strong>' + colored(S.rate(p.bat.ops), S.grade('batting', 'ops', p.bat.ops)) + '</strong>'; } },
+      { key: 'qab', label: 'QAB%', title: 'Quality at-bat rate - the best single number at this age',
+        val: function (p) { return p.bat.qab || 0; },
+        render: function (p) { return p.bat.qab ? '<strong>' + colored(Math.round(p.bat.qab * 100) + '%', S.grade('batting', 'qab', p.bat.qab)) + '</strong>' : '—'; } },
       { key: 'bb', label: 'BB', title: 'Walks', val: function (p) { return p.bat.bb; } },
       { key: 'k', label: 'K', title: 'Strikeouts', val: function (p) { return p.bat.k; } },
       { key: 'kRate', label: 'K%', title: 'Strikeout rate - lower is better', val: function (p) { return p.bat.kRate; },
@@ -464,7 +481,8 @@ P10.Views = (function () {
       ['avg', 'Batting Average', bb.avg],
       ['obp', 'On-Base %', bb.obp],
       ['slg', 'Slugging', bb.slg],
-      ['ops', 'OPS', bb.ops]
+      ['ops', 'OPS', bb.ops],
+      ['qab', 'Quality At Bat %', bb.qab]
     ]);
 
     set('battingBody', html);
@@ -1000,8 +1018,12 @@ P10.Views = (function () {
         '<button class="btn btn-ghost" id="exportData">Export Backup</button>' +
         '<button class="btn btn-ghost" id="importData">Import Backup</button>' +
         '<button class="btn btn-ghost" id="publishData">Publish for Everyone</button>' +
+        '<button class="btn btn-ghost" id="loadSample">Load Sample Data</button>' +
         '<button class="btn btn-danger" id="clearData">Clear All Data</button>' +
       '</div>' +
+      '<div class="hint mt-8"><strong>Load Sample Data</strong> fills every screen with fake numbers so you ' +
+      'can see how the app behaves before real stats exist. A banner appears while it is on, and ' +
+      'Clear All Data removes it completely.</div>' +
       '<div class="hint mt-8"><strong>Publish</strong> downloads a <code>team.json</code> file. Drop it into the ' +
       '<code>data/</code> folder of your site and redeploy - then every parent sees the new numbers automatically, ' +
       'with nothing to install and nothing to click.</div>' +
@@ -1069,12 +1091,16 @@ P10.Views = (function () {
 
     var html = '';
 
+    /* The baseball card leads every player view. It mounts after the rest
+       of the drawer is written so the reveal spin plays on a settled DOM. */
+    html += '<div id="cardHost"></div>';
+
     if (!p.hasData) {
-      html = '<div class="empty"><div class="empty-ic">📋</div>' +
-        '<div class="empty-t">No stats yet</div>' +
+      html += '<div class="empty" style="padding-top:8px"><div class="empty-t">No stats yet</div>' +
         '<div class="empty-d">' + esc(p.name) + ' is on the roster but has no stat lines in the loaded data. ' +
-        'Once stats are uploaded this card fills in automatically.</div></div>';
+        'The card fills in automatically once stats are uploaded.</div></div>';
       set('drawerBody', html);
+      P10.Cards.mount($('cardHost'), p, st.players);
       return;
     }
 
@@ -1095,10 +1121,10 @@ P10.Views = (function () {
         dstat(S.rate(p.bat.ops), 'OPS', S.grade('batting', 'ops', p.bat.ops)) +
         '</div>' +
         '<div class="dstats mt-8">' +
+        dstat(p.bat.qab ? Math.round(p.bat.qab * 100) + '%' : '—', 'QAB', S.grade('batting', 'qab', p.bat.qab)) +
         dstat(p.bat.pa || p.bat.ab, 'PA') +
         dstat(p.bat.h, 'HITS') +
         dstat(p.bat.bb, 'BB') +
-        dstat(p.bat.k, 'K') +
         '</div>';
 
       // team rank meters
@@ -1200,6 +1226,7 @@ P10.Views = (function () {
     }
 
     set('drawerBody', html);
+    P10.Cards.mount($('cardHost'), p, st.players);
     if (p.bat && p.bat.ops > 0) Ch.playerSpark('chartDrawerSpark', p);
   }
 
@@ -1215,6 +1242,7 @@ P10.Views = (function () {
     _weather: null,
     esc: esc,
     renderHero: renderHero,
+    sampleBanner: sampleBanner,
     renderStatbar: renderStatbar,
     renderDashboard: renderDashboard,
     renderRoster: renderRoster,

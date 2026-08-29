@@ -64,6 +64,8 @@
 
   function renderAll() {
     var st = Store.state;
+    var bh = $('sampleHost');
+    if (bh) bh.innerHTML = V.sampleBanner(st);
     V.renderHero(st);
     V.renderStatbar(st);
     renderTab(currentTab);
@@ -448,6 +450,21 @@
     var pub = $('publishData');
     if (pub) pub.addEventListener('click', publish);
 
+    var smp = $('loadSample');
+    if (smp) smp.addEventListener('click', function () {
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Loading…';
+      Store.loadSample().then(function (n) {
+        renderAll();
+        toast('Sample data loaded (' + n + ' stat sets)', 'good');
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.textContent = 'Load Sample Data';
+        toast(e.message || 'Sample data could not load', 'bad');
+      });
+    });
+
     var clr = $('clearData');
     if (clr) clr.addEventListener('click', function () {
       openModal('Clear all data?',
@@ -459,6 +476,12 @@
   }
 
   document.addEventListener('click', function (e) {
+    if (e.target.closest('#clearSample')) {
+      Store.clearData();
+      renderAll();
+      toast('Sample data cleared', 'info');
+      return;
+    }
     if (e.target.closest('#confirmClear')) {
       Store.clearData();
       closeModal();
@@ -643,7 +666,7 @@
      ================================================================== */
   Store.subscribe(function (st, reason) {
     if (reason === 'window' || reason === 'ingest' || reason === 'import' ||
-        reason === 'clear' || reason === 'published') {
+        reason === 'clear' || reason === 'published' || reason === 'sample') {
       renderAll();
     }
   });
