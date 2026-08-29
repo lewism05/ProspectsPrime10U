@@ -1301,3 +1301,12 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   font-family: var(--f-display); font-size: 9px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--text-3); margin-top: 1px;
 }
+
+/* Card upload feedback */
+.card-msg {
+  margin-top: 10px;
+  max-width: 320px;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.5;
+}

@@ -42,3 +42,9 @@
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Serverless function that lets families add a player photo everyone can see.
+# Plain JS, no dependencies, no build step.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "none"

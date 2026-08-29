@@ -10,11 +10,13 @@
      2. A LOCAL photo in this browser's storage, which overrides the team
         photo for whoever added it.
 
-   There is no third option. The site is static - there is no server to
-   receive an upload, so a photo a parent adds on their phone physically
-   cannot reach anyone else's device. Getting a photo to the whole team
-   means committing the file, which is what the Download Photo Pack button
-   in Manage exists to make easy.
+   Anyone can push a local photo up to become the team photo, using the
+   team code. That goes through a small Netlify function which commits the
+   file to the repo - the site itself stays static, and the GitHub token
+   never leaves the server. Live for everyone about a minute later.
+
+   If uploads are not configured the card falls back to local-only and
+   says so plainly, rather than pretending the photo went somewhere.
    ========================================================================== */
 window.P10 = window.P10 || {};
 
@@ -113,6 +115,44 @@ P10.Cards = (function () {
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  /* ==================================================================
+     TEAM UPLOAD
+     Posts to the Netlify function, which does the committing. The team
+     code is remembered once so nobody has to type it every time.
+     ================================================================== */
+  var CODE_KEY = C.ns + '_teamcode';
+  var uploadAvailable = null;   // null = not probed yet
+
+  function getCode() {
+    try { return localStorage.getItem(CODE_KEY) || ''; } catch (e) { return ''; }
+  }
+  function setCode(v) {
+    try { v ? localStorage.setItem(CODE_KEY, v) : localStorage.removeItem(CODE_KEY); } catch (e) {}
+  }
+
+  /* Ask the function whether it is configured. A GET gets a 405 from a
+     live function and a 404 when there is none, which is enough to tell
+     the two apart without uploading anything. */
+  function probeUpload() {
+    if (uploadAvailable !== null) return Promise.resolve(uploadAvailable);
+    return fetch('/.netlify/functions/upload-photo', { method: 'GET' })
+      .then(function (r) { uploadAvailable = r.status !== 404; return uploadAvailable; })
+      .catch(function () { uploadAvailable = false; return false; });
+  }
+
+  function uploadToTeam(playerName, dataUrl, code) {
+    return fetch('/.netlify/functions/upload-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ player: playerName, image: dataUrl, code: code })
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) throw new Error(j.detail ? j.error + ' ' + j.detail : (j.error || 'Upload failed'));
+        return j;
+      });
     });
   }
 
@@ -310,12 +350,16 @@ P10.Cards = (function () {
   }
 
   function hintFor(p) {
-    if (getPhoto(p.name)) {
-      return 'Saved on this device. To put it on the card for everyone, send it to ' +
-             'your coach - the site has no server to upload it to.';
+    if (hasTeamPhoto(p.name) && !getPhoto(p.name)) {
+      return 'This is the team photo - everyone sees it. Adding one here replaces it ' +
+             'on your device only, unless you share it with the team.';
     }
-    return 'A photo you add is saved on this device only. Team photos are the ones ' +
-           'a coach commits to the site, and those show up for everybody.';
+    if (getPhoto(p.name)) {
+      return 'Saved on this device. Use Share With Team to put it on the card for ' +
+             'every family, on every phone.';
+    }
+    return 'Add a photo and it saves here. Share it with the team and it goes on the ' +
+           'card for everybody.';
   }
 
   /* ================= mount ================= */
@@ -344,8 +388,12 @@ P10.Cards = (function () {
           '<button class="btn btn-ghost" id="bbFlip">Flip Card</button>' +
           '<button class="btn btn-ghost" id="bbUpload">' +
             (getPhoto(p.name) ? 'Change Photo' : 'Add Photo') + '</button>' +
-          (getPhoto(p.name) ? '<button class="btn btn-ghost" id="bbRemove">Remove</button>' : '') +
+          (getPhoto(p.name)
+            ? '<button class="btn btn-primary hidden" id="bbShare">Share With Team</button>' +
+              '<button class="btn btn-ghost" id="bbRemove">Remove</button>'
+            : '') +
         '</div>' +
+        '<div class="card-msg hidden" id="bbMsg"></div>' +
         '<div class="card-err hidden" id="bbErr"></div>' +
         '<div class="card-hint">' + hintFor(p) + '</div>' +
       '</div>';
@@ -434,6 +482,53 @@ P10.Cards = (function () {
       });
     }
 
+    /* The share button only appears once we know the function is live.
+       Offering it on a site with no upload endpoint would be a lie. */
+    var shareBtn = host.querySelector('#bbShare');
+    var msgEl = host.querySelector('#bbMsg');
+
+    function say(text, kind) {
+      if (!msgEl) return;
+      msgEl.className = 'card-msg msg msg-' + (kind || 'info');
+      msgEl.innerHTML = text;
+    }
+
+    if (shareBtn) {
+      probeUpload().then(function (ok) {
+        if (ok) shareBtn.classList.remove('hidden');
+      });
+
+      shareBtn.addEventListener('click', function () {
+        var data = getPhoto(p.name);
+        if (!data) return;
+
+        var code = getCode();
+        if (!code) {
+          code = window.prompt(
+            'Team code\n\nThis puts ' + p.name + '\'s photo on the card for every ' +
+            'family, on every device. Your coach has the code.');
+          if (!code) return;
+          code = code.trim();
+        }
+
+        shareBtn.disabled = true;
+        shareBtn.textContent = 'Sending…';
+        say('Uploading…', 'info');
+
+        uploadToTeam(p.name, data, code).then(function (res) {
+          setCode(code);
+          say('<strong>Done.</strong> ' + esc(res.message), 'good');
+          shareBtn.textContent = 'Shared';
+        }).catch(function (err) {
+          // A wrong code should not stay remembered.
+          if (/code is not right/i.test(err.message)) setCode('');
+          shareBtn.disabled = false;
+          shareBtn.textContent = 'Share With Team';
+          say(esc(err.message), 'bad');
+        });
+      });
+    }
+
     input.addEventListener('change', function () {
       var file = this.files && this.files[0];
       this.value = '';
@@ -455,6 +550,10 @@ P10.Cards = (function () {
   return {
     mount: mount,
     getPhoto: getPhoto,
+    getCode: getCode,
+    setCode: setCode,
+    probeUpload: probeUpload,
+    uploadToTeam: uploadToTeam,
     teamPhotoUrl: teamPhotoUrl,
     hasTeamPhoto: hasTeamPhoto,
     loadManifest: loadManifest,

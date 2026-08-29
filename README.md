@@ -126,28 +126,71 @@ their baseball card. It spins in once, then sits there. **Flip Card** turns it
 over to a full stat back: batting, pitching, fielding, innings by position, and
 a short scouting line generated from what the numbers actually say.
 
-**Photos.** There are two kinds, and the difference matters.
+**Photos.** Anyone can add a photo to a player's card, and anyone can push it
+up so the whole team sees it.
 
-A **team photo** is a file committed to `assets/players/<slug>.jpg`, named after
-the player: `jackson-lewis.jpg`, `manuel-cruz-jr.jpg`. It ships with the site, so
-**everybody sees it, on every device.** That is the one you want.
+Tap the card, pick a photo. It saves on that device straight away. Then
+**Share With Team** puts it on the card for every family, on every phone. It
+asks for the team code the first time and remembers it after that.
 
-A **local photo** is one someone adds from the card itself. It is downscaled and
-compressed in their browser and saved in that browser's storage. It shows up for
-them and nobody else, on that one device.
+Behind that button is a small Netlify function that commits the file into
+`assets/players/` and updates `data/photos.json`. Netlify redeploys on the
+commit, so it is live for everyone about a minute later. The site itself stays
+static; the GitHub token lives only in Netlify's environment and never reaches
+anybody's browser.
 
-That is not a limitation I chose - it is what a static site is. There is no
-server for a phone to upload to. A photo added on a phone physically cannot
-reach anyone else's device.
+Coaches can also do it in bulk: **Manage > Team Photos** to add several at once,
+then **Download Photo Pack** to save them already named correctly plus a
+regenerated `photos.json`, and commit those by hand.
 
-So the workflow is: **Coach > Manage > Team Photos.** Tap a player, pick their
-photo, repeat. Hit **Download Photo Pack** and every photo saves already named
-correctly. Drop them into `assets/players/`, commit, push. Forty seconds later
-every parent has them.
+---
 
-If a parent wants their kid's photo on the card for the whole team, they send it
-to you and you add it. Tell them that up front, or they will add one on their
-phone, see it on their phone, and reasonably assume everyone else can too.
+## Turning on team photo uploads
+
+Until this is set up, Share With Team stays hidden and photos are local-only.
+Four things, once.
+
+### 1. Make a GitHub token
+
+Go to **github.com/settings/personal-access-tokens/new**
+
+- **Repository access:** Only select repositories, and pick this repo alone
+- **Permissions:** Repository permissions > **Contents: Read and write**
+- Generate it and copy it
+
+Scope it to this one repo. A token that can write to everything you own is not
+worth the convenience.
+
+### 2. Put it in Netlify
+
+**Site configuration > Environment variables > Add a variable:**
+
+| Key | Value |
+| --- | --- |
+| `GITHUB_TOKEN` | the token you just copied |
+| `GITHUB_REPO` | `lewism05/ProspectsPrime10U` |
+| `TEAM_CODE` | a code you give families, e.g. `prospects2026` |
+| `GITHUB_BRANCH` | `main` (only if your default branch is not main) |
+
+The token stays server-side. It is never sent to a browser and never appears in
+the page source.
+
+### 3. Redeploy
+
+**Deploys > Trigger deploy > Deploy site.** Environment variables only take
+effect on a new deploy.
+
+### 4. Give families the team code
+
+That is the whole gate. Without it, anyone who found the function's URL could
+write files into your repo, so uploads stay switched off until `TEAM_CODE` is
+set rather than defaulting to open.
+
+If you ever need to shut uploads off, delete `TEAM_CODE` and redeploy.
+
+**What gets rejected:** anything that is not a JPEG, PNG or WebP; anything over
+700KB; a missing or wrong team code; a request with no player name. SVG is
+blocked on purpose - it can carry scripts.
 
 ### Getting stats to everyone else
 
@@ -232,6 +275,8 @@ js/
   config.js           ROSTER, SCHEDULE, BENCHMARKS, PASSCODE  <- edit this one
   csv.js              GameChanger CSV parser + column matching
   cards.js            baseball card: spin, flip, photo upload
+netlify/functions/
+  upload-photo.js     commits a shared player photo to the repo
   stats.js            stat extraction, player build, tiers, ranks
   store.js            state, localStorage, publish/load
   insights.js         weakness detection, achievements, team focus
@@ -250,10 +295,15 @@ To test with fake data before your real stats are ready, upload the files in
 
 ## Troubleshooting
 
-**A photo shows on one device but not another.** That is a local photo, not a
-team photo. Local photos live in one browser's storage and cannot travel. Add it
-under Manage > Team Photos, download the pack, commit the file to
-`assets/players/`, and it will be on every device.
+**A photo shows on one device but not another.** It was saved locally and never
+shared. Open that player's card and hit **Share With Team**.
+
+**Share With Team is not showing.** The upload function is not deployed or not
+configured - see "Turning on team photo uploads". Photos still work locally in
+the meantime.
+
+**"Uploads are switched off."** `TEAM_CODE` is not set in Netlify. That is
+deliberate: uploads stay closed rather than open to anybody who finds the URL.
 
 **A player shows no stats.** Their name in GameChanger does not match
 `js/config.js`. The matcher handles `Last, First`, suffixes like Jr., and
