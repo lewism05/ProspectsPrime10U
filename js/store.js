@@ -14,6 +14,7 @@ P10.Store = (function () {
   var KEY_COACH = NS + '_coach';
   var KEY_LINEUP = NS + '_lineups';
   var KEY_GAMESTATE = NS + '_gamestate';
+  var KEY_GAMES = NS + '_games';
 
   /* ---------------- State ---------------- */
   var state = {
@@ -25,6 +26,7 @@ P10.Store = (function () {
     coach: false,
     lineups: { standard: null, weak: null, elite: null },
     gameState: { strengths: {}, speeds: {} },
+    games: [],
     ready: false
   };
 
@@ -71,6 +73,12 @@ P10.Store = (function () {
     state.coach = ls(KEY_COACH) === true;
     state.lineups = ls(KEY_LINEUP) || state.lineups;
     state.gameState = ls(KEY_GAMESTATE) || state.gameState;
+    state.games = ls(KEY_GAMES) || [];
+  }
+
+  function persistGames() {
+    ls(KEY_GAMES, state.games);
+    emit('games');
   }
 
   function savePrefs() { ls(KEY_PREFS, { viewWindow: state.viewWindow }); }
@@ -95,6 +103,7 @@ P10.Store = (function () {
         if (!hasLocal || incoming > localTs) {
           state.data = json.data;
           state.meta = json.meta || { updatedAt: new Date().toISOString(), source: 'published' };
+          if (Array.isArray(json.games)) { state.games = json.games; ls(KEY_GAMES, state.games); }
           persist();
           return true;
         }
@@ -206,6 +215,7 @@ P10.Store = (function () {
       exportedAt: new Date().toISOString(),
       meta: state.meta,
       data: state.data,
+      games: state.games,
       lineups: state.lineups,
       gameState: state.gameState
     };
@@ -227,6 +237,7 @@ P10.Store = (function () {
     if (!json || !json.data) throw new Error('Not a valid Prospects Prime 10U export file.');
     state.data = json.data;
     state.meta = json.meta || { updatedAt: new Date().toISOString(), source: 'import' };
+    if (json.games) { state.games = json.games; ls(KEY_GAMES, state.games); }
     if (json.lineups) { state.lineups = json.lineups; saveLineups(); }
     if (json.gameState) { state.gameState = json.gameState; saveGameState(); }
     persist();
@@ -259,6 +270,7 @@ P10.Store = (function () {
     setCoach: setCoach,
     setMeta: setMeta,
     saveLineups: saveLineups,
+    persistGames: persistGames,
     saveGameState: saveGameState,
     recompute: recompute,
     isSample: isSample,

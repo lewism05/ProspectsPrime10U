@@ -603,7 +603,8 @@
         updatedAt: new Date().toISOString(),
         source: 'published'
       }),
-      data: Store.state.data
+      data: Store.state.data,
+      games: Store.state.games
     };
     var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -625,6 +626,130 @@
       '</ol>' +
       '<div class="hint mt-16">Once the daily sync is set up this step happens on its own.</div>');
   }
+
+
+  /* ==================================================================
+     GAME LOG EDITOR
+     ================================================================== */
+  var editingGame = null;
+
+  function openGameEditor(game) {
+    editingGame = game;
+    openModal(game.opponent ? 'Edit Game' : 'Log A Game',
+      P10.Matchup.editorHtml(game, Store.state),
+      '<button class="btn btn-ghost" data-close-modal>Cancel</button>' +
+      (G_hasId(game) ? '<button class="btn btn-danger" id="gDelete">Delete</button>' : '') +
+      '<button class="btn btn-primary" id="gSave">Save Game</button>');
+  }
+
+  function G_hasId(game) {
+    return P10.GameLog.all().some(function (g) { return g.id === game.id; });
+  }
+
+  /* Read the form back into the game object. */
+  function collectGame() {
+    var g = editingGame;
+    if (!g) return null;
+    g.date = ($('gDate') || {}).value || g.date;
+    g.opponent = (($('gOpp') || {}).value || '').trim();
+    var us = ($('gUs') || {}).value, them = ($('gThem') || {}).value;
+    g.us = us === '' || us === undefined ? null : Number(us);
+    g.them = them === '' || them === undefined ? null : Number(them);
+    g.notes = (($('gNotes') || {}).value || '').trim();
+
+    g.pitchers = [];
+    document.querySelectorAll('#gPitchers .prow').forEach(function (row) {
+      var name = (row.querySelector('.pname') || {}).value || '';
+      if (!name) return;
+      function v(sel) { var e = row.querySelector(sel); return e && e.value !== '' ? Number(e.value) : ''; }
+      g.pitchers.push({
+        name: name, ip: v('.pip'), r: v('.pr'), bb: v('.pbb'), k: v('.pk'), pitches: v('.ppit')
+      });
+    });
+    return g;
+  }
+
+  document.addEventListener('click', function (e) {
+    /* open the editor */
+    if (e.target.closest('#addGame')) { openGameEditor(P10.GameLog.blank()); return; }
+
+    var ed = e.target.closest('[data-edit-game]');
+    if (ed) {
+      var g = P10.GameLog.byId(ed.dataset.editGame);
+      if (g) openGameEditor(JSON.parse(JSON.stringify(g)));
+      return;
+    }
+
+    /* home / away */
+    var side = e.target.closest('#gSide .seg-btn');
+    if (side && editingGame) {
+      document.querySelectorAll('#gSide .seg-btn').forEach(function (b) { b.classList.remove('active'); });
+      side.classList.add('active');
+      editingGame.away = side.dataset.side === 'away';
+      return;
+    }
+
+    /* batting order picker - tap to add in sequence, tap again to remove */
+    var pick = e.target.closest('[data-pick-name]');
+    if (pick && editingGame) {
+      var nm = pick.dataset.pickName;
+      var lu = editingGame.lineup || (editingGame.lineup = []);
+      var at = lu.indexOf(nm);
+      if (at >= 0) lu.splice(at, 1); else if (lu.length < 12) lu.push(nm);
+      var host = $('gLineup');
+      if (host) {
+        host.querySelectorAll('[data-pick-name]').forEach(function (btn) {
+          var i = lu.indexOf(btn.dataset.pickName);
+          btn.classList.toggle('on', i >= 0);
+          var badge = btn.querySelector('.pk-n');
+          if (i >= 0) {
+            if (badge) badge.textContent = i + 1;
+            else btn.insertAdjacentHTML('afterbegin', '<span class="pk-n">' + (i + 1) + '</span>');
+          } else if (badge) badge.remove();
+        });
+      }
+      return;
+    }
+
+    /* pitcher rows */
+    if (e.target.closest('#gAddPitcher') && editingGame) {
+      collectGame();
+      var host2 = $('gPitchers');
+      var idx = host2.querySelectorAll('.prow').length;
+      host2.insertAdjacentHTML('beforeend',
+        P10.Matchup.pitcherRow({ name: '', ip: '', r: '', bb: '', k: '', pitches: '' }, idx, Store.state.players));
+      return;
+    }
+    var drop = e.target.closest('[data-drop-pitcher]');
+    if (drop && editingGame) {
+      var row = drop.closest('.prow');
+      if (row) row.remove();
+      return;
+    }
+
+    /* save / delete */
+    if (e.target.closest('#gSave') && editingGame) {
+      var game = collectGame();
+      if (!game.opponent) {
+        toast('Add an opponent name first', 'bad');
+        return;
+      }
+      P10.GameLog.upsert(game);
+      editingGame = null;
+      closeModal();
+      renderAll();
+      toast('Game logged', 'good');
+      return;
+    }
+    if (e.target.closest('#gDelete') && editingGame) {
+      P10.GameLog.remove(editingGame.id);
+      editingGame = null;
+      closeModal();
+      renderAll();
+      toast('Game removed', 'info');
+      return;
+    }
+  });
 
   /* ==================================================================
      TOAST
@@ -666,7 +791,8 @@
      ================================================================== */
   Store.subscribe(function (st, reason) {
     if (reason === 'window' || reason === 'ingest' || reason === 'import' ||
-        reason === 'clear' || reason === 'published' || reason === 'sample') {
+        reason === 'clear' || reason === 'published' || reason === 'sample' ||
+        reason === 'games') {
       renderAll();
     }
   });

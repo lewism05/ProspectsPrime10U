@@ -26,7 +26,7 @@ P10.Views = (function () {
 
   function empty(icon, title, detail, actionHtml) {
     return '<div class="card"><div class="empty">' +
-      '<div class="empty-ic">' + icon + '</div>' +
+      '<div class="empty-rule"></div>' +
       '<div class="empty-t">' + esc(title) + '</div>' +
       '<div class="empty-d">' + esc(detail) + '</div>' +
       (actionHtml || '') +
@@ -55,7 +55,7 @@ P10.Views = (function () {
   }
 
   function needData() {
-    return empty('📊', 'No stats loaded yet',
+    return empty('', 'No stats loaded yet',
       'Upload a GameChanger CSV export from the Manage tab and every page fills in. ' +
       'Until then the roster is here and everything else waits.',
       P10.Store.state.coach
@@ -82,12 +82,12 @@ P10.Views = (function () {
     var t = st.team;
     var meta = [];
 
-    meta.push('<span class="hero-tag">🗓 ' + esc(C.team.season) + ' Season</span>');
-    meta.push('<span class="hero-tag">👥 ' + C.roster.length + ' Players</span>');
-    if (C.team.homeField) meta.push('<span class="hero-tag">📍 ' + esc(C.team.homeField) + '</span>');
+    meta.push(heroTag('Season', C.team.season));
+    meta.push(heroTag('Roster', C.roster.length + ' Players'));
+    if (C.team.homeField) meta.push(heroTag('Home', C.team.homeField));
 
     var nx = Sch.next();
-    if (nx) meta.push('<span class="hero-tag">⚾ Next: ' + esc(nx.opponent || 'TBD') + ' · ' + Sch.countdownText(nx) + '</span>');
+    if (nx) meta.push(heroTag('Next', (nx.opponent || 'TBD') + ' · ' + Sch.countdownText(nx)));
 
     set('heroMeta', meta.join(''));
 
@@ -102,6 +102,10 @@ P10.Views = (function () {
     }
     set('heroRecord', rec.join(''));
     set('footSeason', esc(C.team.season));
+  }
+
+  function heroTag(label, value) {
+    return '<span class="hero-tag"><b>' + esc(label) + '</b>' + esc(value) + '</span>';
   }
 
   function recBlock(val, lab) {
@@ -243,7 +247,7 @@ P10.Views = (function () {
         '<div class="card-body">' +
         focus.slice(0, 3).map(function (f) {
           return '<div class="issue sev-' + (f.priority >= 3 ? 'high' : f.priority === 2 ? 'med' : 'low') + '">' +
-            '<div class="issue-ic">' + (f.area === 'Pitching' ? '⚾' : f.area === 'Defense' ? '🧤' : f.area === 'Batting' ? '🏏' : '📋') + '</div>' +
+            '<div class="issue-tag">' + esc((f.area || '').slice(0,3)) + '</div>' +
             '<div class="grow"><div class="issue-t">' + esc(f.title) + ' <span class="badge">' + esc(f.stat) + '</span></div>' +
             '<div class="issue-d">' + esc(f.detail) + '</div></div></div>';
         }).join('') +
@@ -285,7 +289,7 @@ P10.Views = (function () {
     if (!g) {
       if (!C.schedule.length) {
         return '<div class="card"><div class="card-body">' +
-          '<div class="row gap-12"><div style="font-size:26px">🗓</div><div>' +
+          '<div class="row gap-12"><div>' +
           '<div class="card-title">No schedule loaded</div>' +
           '<div class="hint">Add your 2026 games in <code>js/config.js</code> and they show up here with a weather forecast for each one.</div>' +
           '</div></div></div></div>';
@@ -375,7 +379,7 @@ P10.Views = (function () {
       '</div>' +
       (ach.length || p.hasData ? '<div class="pcard-flags">' +
         (p.hasData && b.ops > 0 ? '<span class="tier-badge tier-' + p.tier + '">' + S.tierName(p.tier) + '</span>' : '') +
-        ach.map(function (a) { return '<span class="badge">' + a.em + ' ' + esc(a.label) + '</span>'; }).join('') +
+        ach.map(function (a) { return '<span class="badge">' + esc(a.label) + '</span>'; }).join('') +
         '</div>' : '') +
       '<div class="pcard-stats">' +
         '<div class="pcard-stat"><div class="v">' + esc(s1) + '</div><div class="l">' + l1 + '</div></div>' +
@@ -535,7 +539,7 @@ P10.Views = (function () {
     if (!rows.length) {
       set('pitchingBody', sectionHead('Pitching', 'Mound stat lines') +
         (st.team && st.team.withData
-          ? empty('⚾', 'No pitching data', 'The loaded export has no innings pitched. Upload a pitching CSV to fill this in.')
+          ? empty('', 'No pitching data', 'The loaded export has no innings pitched. Upload a pitching CSV to fill this in.')
           : needData()));
       return;
     }
@@ -626,7 +630,7 @@ P10.Views = (function () {
     if (!fld.length && !cat.length) {
       set('defenseBody', sectionHead('Defense', 'Fielding and catching') +
         (st.team && st.team.withData
-          ? empty('🧤', 'No fielding data', 'The loaded export has no fielding columns. Upload a fielding CSV to fill this in.')
+          ? empty('', 'No fielding data', 'The loaded export has no fielding columns. Upload a fielding CSV to fill this in.')
           : needData()));
       return;
     }
@@ -683,7 +687,7 @@ P10.Views = (function () {
 
     if (!C.schedule.length) {
       set('scheduleBody', sectionHead('Schedule', C.team.season + ' season') +
-        empty('🗓', 'No games on the schedule',
+        empty('', 'No games on the schedule',
           'Add your season games to the schedule array in js/config.js. Each one gets a card with a weather forecast, and the coach lineup tools use them for matchup planning.'));
       return;
     }
@@ -748,7 +752,13 @@ P10.Views = (function () {
     var card = L.resolve(st.players, strength);
     var arms = L.pitcherRank(st.players).slice(0, 3);
 
-    return '<div class="field" style="margin-bottom:14px">' +
+    /* If we have played this club before, the scouting report replaces the
+       generic suggestion - it is strictly more useful. */
+    var report = P10.Matchup.render(g, st, strength);
+    var hasHistory = !!P10.GameLog.headToHead(g.opponent);
+
+    return (hasHistory ? '<div class="mb-16">' + report + '</div>' : '<div class="mb-16">' + report + '</div>') +
+      '<div class="field" style="margin-bottom:14px">' +
       '<label>Opponent Strength</label>' +
       '<div class="seg" data-strength-game="' + gid + '">' +
         ['weak', 'standard', 'elite'].map(function (s) {
@@ -759,7 +769,7 @@ P10.Views = (function () {
       '<div class="hint">This retunes the suggested lineup. Tougher opponent leans on on-base and contact; ' +
       'weaker opponent lets the power bats move up.</div>' +
       '</div>' +
-      (card.length ? '<div class="grid g-2">' +
+      (card.length && !hasHistory ? '<div class="grid g-2">' +
         '<div><div class="eyebrow mb-8">Suggested Order</div>' +
         card.map(function (s) {
           return '<div class="lineup-slot"><span class="slot-n">' + s.slot + '</span>' +
@@ -775,6 +785,7 @@ P10.Views = (function () {
             '<span class="slot-grade grade-' + a.grade + '">' + a.grade + '</span></div>';
         }).join('') : '<div class="hint">No pitching data loaded.</div>') +
         '</div></div>'
+        : hasHistory ? ''
         : '<div class="hint">Load batting stats to get a suggested lineup for this game.</div>');
   }
 
@@ -798,7 +809,7 @@ P10.Views = (function () {
       '<div class="card-body">' +
       focus.map(function (f) {
         return '<div class="issue sev-' + (f.priority >= 3 ? 'high' : f.priority === 2 ? 'med' : 'low') + '">' +
-          '<div class="issue-ic">' + (f.area === 'Pitching' ? '⚾' : f.area === 'Defense' ? '🧤' : f.area === 'Batting' ? '🏏' : '📋') + '</div>' +
+          '<div class="issue-tag">' + esc((f.area || '').slice(0,3)) + '</div>' +
           '<div class="grow"><div class="issue-t">' + esc(f.title) +
           ' <span class="badge">' + esc(f.stat) + '</span> <span class="badge">' + esc(f.area) + '</span></div>' +
           '<div class="issue-d">' + esc(f.detail) + '</div></div></div>';
@@ -848,9 +859,9 @@ P10.Views = (function () {
   }
 
   function drillCard(d) {
-    var audience = d.audience === 'coach' ? '👥 Team practice'
-      : d.audience === 'parent' ? '🏡 Backyard'
-      : '🧍 On their own';
+    var audience = d.audience === 'coach' ? 'Team practice'
+      : d.audience === 'parent' ? 'Backyard'
+      : 'On their own';
     return '<div class="drill">' +
       '<div class="drill-h"><div class="drill-t">' + esc(d.title) + '</div>' +
       '<span class="badge">' + esc(d.time) + '</span></div>' +
@@ -956,7 +967,7 @@ P10.Views = (function () {
 
   function lockedCard(what) {
     return '<div class="card"><div class="empty">' +
-      '<div class="empty-ic">🔒</div>' +
+      '<div class="empty-rule"></div>' +
       '<div class="empty-t">' + esc(what) + ' is coach-only</div>' +
       '<div class="empty-d">This section holds lineup decisions and playing-time analysis. ' +
       'Enter the coach passcode in Settings to unlock it.</div>' +
@@ -987,7 +998,7 @@ P10.Views = (function () {
       '<div class="card-body">' +
       '<div class="dropzone" id="dropzone">' +
         '<input type="file" id="fileInput" multiple accept=".csv,text/csv" hidden>' +
-        '<div class="dropzone-ic">📁</div>' +
+        
         '<div class="dropzone-t">Drop CSVs here or click to browse</div>' +
         '<div class="dropzone-h">Batting · Pitching · Fielding · Catching. Name files with the window ' +
         '("season", "last 8", "last 4") and they sort themselves.</div>' +
@@ -1044,6 +1055,9 @@ P10.Views = (function () {
           : '<div class="msg msg-good mt-16">Plate appearances are spread evenly across the roster. That is exactly right for this age.</div>') +
         '</div></div>';
     }
+
+    /* ---- Game log ---- */
+    html += P10.Matchup.renderLog(st);
 
     /* ---- Roster editor note ---- */
     html += '<div class="card">' + cardHead('Roster & Schedule') +
@@ -1107,7 +1121,7 @@ P10.Views = (function () {
     var ach = I.achievements(p, st.players);
     if (ach.length) {
       html += '<div class="dsec"><div class="row gap-4" style="flex-wrap:wrap">' +
-        ach.map(function (a) { return '<span class="ach"><span class="em">' + a.em + '</span>' + esc(a.label) + '</span>'; }).join('') +
+        ach.map(function (a) { return '<span class="ach">' + esc(a.label) + '</span>'; }).join('') +
         '</div></div>';
     }
 
@@ -1190,7 +1204,7 @@ P10.Views = (function () {
       html += '<div class="dsec"><div class="dsec-h">What He Does Well</div>' +
         strengths.map(function (s) {
           return '<div class="issue sev-low" style="border-left-color:var(--good)">' +
-            '<div class="issue-ic">✓</div><div class="issue-d">' + esc(s) + '</div></div>';
+            '<div class="issue-tag ok">OK</div><div class="issue-d">' + esc(s) + '</div></div>';
         }).join('') + '</div>';
     }
 

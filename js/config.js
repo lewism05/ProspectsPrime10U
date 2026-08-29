@@ -13,7 +13,9 @@ P10.CONFIG = {
     ageGroup: '10U',
     fullName: 'Prospects Prime 10U Baseball',
     season: '2026',
-    homeField: 'Phillips Park',
+    /* Leave blank unless you actually have a home park. It shows in the
+       masthead and on game cards that have no location of their own. */
+    homeField: '',
     /* Used for the weather forecast on the schedule page.
        Change to your home city if games are elsewhere. */
     location: { lat: 36.0626, lng: -94.1574, label: 'Fayetteville, AR' }
@@ -41,7 +43,13 @@ P10.CONFIG = {
      Add games here. away:true means we are the visiting team.
      Leave empty [] and the Schedule tab shows an "add games" state.
      ------------------------------------------------------------------ */
-  schedule: [],
+  schedule: [
+    // Replace with your real 2026 games. Delete these and the Schedule tab
+    // shows an "add games" state instead.
+    { id: 1, date: '2026-09-06', away: false, opponent: 'AR Bombers 10U',      location: 'Memorial Park',  time: '10:00 AM' },
+    { id: 2, date: '2026-09-06', away: true,  opponent: 'Diamond Dawgs NWA 10U', location: 'Memorial Park', time: '1:30 PM' },
+    { id: 3, date: '2026-09-13', away: false, opponent: 'Springdale Baseball Club 10U', location: 'Kessler Mountain', time: '11:00 AM' }
+  ],
 
   /* ------------------------------------------------------------------
      10U BENCHMARKS

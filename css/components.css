@@ -985,3 +985,286 @@ select.input {
   .sample-banner .sb-text { flex: 1 1 100%; order: 2; }
   .sample-banner .btn { order: 1; margin-left: auto; }
 }
+
+
+/* ==========================================================================
+   POST-EMOJI CHROME
+   Typographic replacements for glyphs that used to carry meaning.
+   ========================================================================== */
+
+/* Hero tags read label-then-value instead of emoji-then-text. */
+.hero-tag { gap: 7px; padding: 4px 12px 4px 10px; }
+.hero-tag b {
+  font-family: var(--f-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding-right: 7px;
+  border-right: 1px solid var(--line-strong);
+}
+
+/* Empty states lead with a rule, not a floating emoji. */
+.empty-rule {
+  width: 44px; height: 2px;
+  margin: 0 auto 16px;
+  border-radius: 2px;
+  background: var(--chrome-grad);
+  opacity: .5;
+}
+.empty-ic { display: none; }
+
+/* Issue rows carry a small area tag where an emoji used to sit. */
+.issue-tag {
+  flex-shrink: 0;
+  min-width: 30px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  border: 1px solid var(--line-strong);
+  font-family: var(--f-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  text-align: center;
+  height: fit-content;
+}
+.issue-tag.ok {
+  background: var(--good-bg);
+  border-color: rgba(61,220,145,.35);
+  color: var(--good);
+}
+
+/* Coach-only tabs are marked with a word, not a padlock. */
+.navtab .lock {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  opacity: 1;
+  margin-left: 6px;
+  padding: 2px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--line-strong);
+  color: var(--text-3);
+  vertical-align: middle;
+}
+
+/* Achievement chips: colour and weight carry the emphasis now. */
+.ach {
+  font-family: var(--f-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: linear-gradient(160deg, var(--surface-3), var(--surface-2));
+  border-color: var(--line-strong);
+  color: var(--chrome);
+}
+
+.dropzone-ic { display: none; }
+.dropzone { padding: 26px 20px; }
+
+/* The chrome rail was doing too much work. Keep it on the masthead-level
+   cards only; elsewhere a plain border reads cleaner. */
+.card-accent::before { opacity: .55; height: 1.5px; }
+
+/* ==========================================================================
+   MATCHUP REPORT
+   ========================================================================== */
+.mu-none {
+  padding: 13px 15px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--info);
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.mu-none strong { color: var(--text); }
+
+.mu { display: flex; flex-direction: column; gap: 18px; }
+
+/* ---- record header ---- */
+.mu-head {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  background: linear-gradient(140deg, var(--surface-3), var(--surface-2));
+  border: 1px solid var(--line-strong);
+}
+.mu-rec { text-align: center; flex-shrink: 0; }
+.mu-rec-v {
+  font-family: var(--f-display);
+  font-size: 26px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.mu-rec-v.good { color: var(--good); }
+.mu-rec-v.bad  { color: var(--bad); }
+.mu-rec-l {
+  font-family: var(--f-display);
+  font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--text-3); margin-top: 4px;
+}
+.mu-hist { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.mu-hist-g { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.mu-hist-g .d {
+  font-family: var(--f-display); font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.rslt {
+  font-family: var(--f-display);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  padding: 3px 8px; border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.rslt.win  { background: var(--good-bg); color: var(--good); border: 1px solid rgba(61,220,145,.35); }
+.rslt.loss { background: var(--bad-bg);  color: var(--bad);  border: 1px solid rgba(255,107,107,.35); }
+.rslt.tie  { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--line); }
+
+/* ---- sections ---- */
+.mu-sec { border-top: 1px solid var(--line); padding-top: 15px; }
+.mu-sec-h {
+  font-family: var(--f-display);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .17em;
+  text-transform: uppercase; color: var(--chrome-dim); margin-bottom: 11px;
+}
+.mu-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.35fr); gap: 16px; }
+.mu-block-h {
+  font-family: var(--f-display);
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 7px;
+}
+.mu-empty { font-size: 12px; color: var(--text-3); font-style: italic; }
+
+.mu-order { margin: 0; padding-left: 20px; font-size: 13px; }
+.mu-order li { padding: 2.5px 0; color: var(--text-2); }
+
+table.mu-tbl { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+table.mu-tbl th {
+  font-family: var(--f-display); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+  text-align: right; padding: 5px 4px; border-bottom: 1px solid var(--line-strong);
+}
+table.mu-tbl th:first-child { text-align: left; }
+table.mu-tbl td { padding: 6px 4px; text-align: right; border-bottom: 1px solid var(--line-soft); }
+table.mu-tbl td:first-child { text-align: left; font-weight: 600; }
+table.mu-tbl tr:last-child td { border-bottom: none; }
+
+.mu-notes {
+  margin-top: 13px; padding: 10px 13px;
+  background: var(--surface-2); border-left: 2px solid var(--chrome-dim);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+}
+.mu-notes b {
+  display: block; font-family: var(--f-display); font-size: 9.5px;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px;
+}
+
+/* ---- form shift ---- */
+.mu-form { display: flex; flex-direction: column; }
+.mu-form-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 2px; border-bottom: 1px solid var(--line-soft); font-size: 13px;
+}
+.mu-form-row:last-child { border-bottom: none; }
+.mu-form-row .n { flex: 1; font-weight: 600; min-width: 0; }
+.mu-form-row .m { font-family: var(--f-num); font-size: 12px; }
+.mu-form-row .m.good { color: var(--good); }
+.mu-form-row .m.bad  { color: var(--bad); }
+.mu-form-row .s { font-family: var(--f-num); font-size: 11.5px; color: var(--text-3); width: 108px; text-align: right; }
+
+/* ---- suggested order with move badges ---- */
+.mu-lineup { display: flex; flex-direction: column; }
+.mu-slot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 2px; border-bottom: 1px solid var(--line-soft);
+}
+.mu-slot:last-child { border-bottom: none; }
+.mu-slot .sn {
+  width: 24px; height: 24px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px; background: var(--surface-3); border: 1px solid var(--line-strong);
+  font-family: var(--f-display); font-size: 12px; font-weight: 700; color: var(--chrome);
+}
+.mu-slot .sm { flex: 1; min-width: 0; }
+.mu-slot .nm { display: block; font-weight: 600; font-size: 13px; }
+.mu-slot .wy { display: block; font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.mv {
+  flex-shrink: 0;
+  font-family: var(--f-display); font-size: 10px; font-weight: 700;
+  letter-spacing: .06em; padding: 2px 6px; border-radius: 3px;
+}
+.mv.up   { background: var(--good-bg); color: var(--good); }
+.mv.dn   { background: var(--bad-bg);  color: var(--bad); }
+.mv.new  { background: var(--info-bg); color: var(--info); }
+.mv.same { background: var(--surface-3); color: var(--text-3); }
+
+/* ---- arms ---- */
+.mu-arms { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 8px; }
+.mu-arm {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-left-width: 3px;
+}
+.mu-arm.ok { border-left-color: var(--good); }
+.mu-arm.no { border-left-color: var(--warn); }
+.mu-arm .an { font-weight: 600; font-size: 12.5px; }
+.mu-arm .al { font-size: 10.5px; color: var(--text-3); flex: 1; min-width: 0; }
+.mu-arm .ab {
+  font-family: var(--f-display); font-size: 9px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; flex-shrink: 0;
+}
+.mu-arm.ok .ab { color: var(--good); }
+.mu-arm.no .ab { color: var(--warn); }
+
+.mu-fine { font-size: 11.5px; color: var(--text-3); margin-top: 10px; line-height: 1.55; }
+
+/* ==========================================================================
+   GAME LOG EDITOR
+   ========================================================================== */
+.pickgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px,1fr)); gap: 6px; }
+.pick {
+  position: relative;
+  padding: 9px 10px 9px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  font-size: 12.5px; text-align: left;
+  transition: all .16s;
+}
+.pick:hover { border-color: var(--chrome-dim); background: var(--surface-3); }
+.pick.on {
+  border-color: var(--chrome-dim);
+  background: var(--surface-hi);
+  padding-left: 30px;
+  font-weight: 600;
+}
+.pk-n {
+  position: absolute; left: 7px; top: 50%; transform: translateY(-50%);
+  width: 17px; height: 17px; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--chrome-grad); color: var(--text-inverse);
+  font-family: var(--f-display); font-size: 10px; font-weight: 700;
+}
+
+.prow {
+  display: grid;
+  grid-template-columns: minmax(0,1.7fr) repeat(5, minmax(0,.62fr)) 32px;
+  gap: 5px; margin-bottom: 6px;
+}
+.prow .input { height: 32px; font-size: 12px; padding: 0 8px; }
+.prow select.input { padding-right: 24px; }
+
+@media (max-width: 860px) {
+  .mu-grid { grid-template-columns: minmax(0,1fr); }
+  .mu-hist { margin-left: 0; width: 100%; }
+  .prow { grid-template-columns: repeat(3, minmax(0,1fr)) 32px; }
+  .prow select.input { grid-column: 1 / -1; }
+}

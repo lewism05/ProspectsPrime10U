@@ -194,6 +194,8 @@ P10.Insights = (function () {
   /* ==================================================================
      ACHIEVEMENTS — badges for the roster grid and player drawer
      ================================================================== */
+  /* Badges are typographic on purpose. Emoji chips read as a template;
+     a clean label with a colour treatment reads like a sports product. */
   function achievements(p, all) {
     var out = [];
     var b = p.bat, pit = p.pit, f = p.fld;
@@ -213,39 +215,39 @@ P10.Insights = (function () {
     }
 
     var opsLeader = topOf(function (x) { return x.bat && x.bat.ops; });
-    if (opsLeader === p) out.push({ em: '👑', label: 'Team OPS Leader' });
+    if (opsLeader === p) out.push({ label: 'Team OPS Leader' });
 
     var obpLeader = topOf(function (x) { return x.bat && x.bat.obp; });
-    if (obpLeader === p && obpLeader !== opsLeader) out.push({ em: '🧲', label: 'On-Base Leader' });
+    if (obpLeader === p && obpLeader !== opsLeader) out.push({ label: 'On-Base Leader' });
 
     var eraLeader = bottomOf(function (x) { return x.pit && x.pit.ip >= C.minSample.ip ? x.pit.era : 0; });
-    if (eraLeader === p) out.push({ em: '🛡️', label: 'Lowest ERA' });
+    if (eraLeader === p) out.push({ label: 'Lowest ERA' });
 
     var strikeLeader = topOf(function (x) { return x.pit && x.pit.ip >= C.minSample.ip ? x.pit.strike : 0; });
-    if (strikeLeader === p) out.push({ em: '🎯', label: 'Best Strike %' });
+    if (strikeLeader === p) out.push({ label: 'Best Strike %' });
 
     if (b) {
-      if (b.ops >= C.bench.batting.ops.elite) out.push({ em: '🔥', label: '1.200+ OPS' });
-      if (b.obp >= C.bench.batting.obp.elite) out.push({ em: '💎', label: '.600 OBP' });
-      if (b.hr >= 1) out.push({ em: '💣', label: b.hr + ' Home Run' + (b.hr > 1 ? 's' : '') });
-      if (b.sb >= 10) out.push({ em: '⚡', label: b.sb + ' Steals' });
+      if (b.ops >= C.bench.batting.ops.elite) out.push({ label: '1.200+ OPS' });
+      if (b.obp >= C.bench.batting.obp.elite) out.push({ label: '.600 OBP' });
+      if (b.hr >= 1) out.push({ label: b.hr + ' Home Run' + (b.hr > 1 ? 's' : '') });
+      if (b.sb >= 10) out.push({ label: b.sb + ' Steals' });
       if (b.kRate > 0 && b.kRate <= C.bench.batting.kRate.elite && b.pa >= C.minSample.pa) {
-        out.push({ em: '🪶', label: 'Rarely Strikes Out' });
+        out.push({ label: 'Rarely Strikes Out' });
       }
-      if (b.d2 + b.d3 >= 5) out.push({ em: '↔️', label: 'Gap Power' });
+      if (b.d2 + b.d3 >= 5) out.push({ label: 'Gap Power' });
     }
     if (pit && pit.ip >= C.minSample.ip) {
-      if (pit.strike >= C.bench.pitching.strike.elite) out.push({ em: '🧊', label: 'Strike Machine' });
-      if (pit.era > 0 && pit.era <= C.bench.pitching.era.elite) out.push({ em: '🔒', label: 'Sub-2.00 ERA' });
-      if (pit.kip >= C.bench.pitching.kip.elite) out.push({ em: '🌪️', label: 'Swing & Miss Stuff' });
-      if (pit.ip >= 15) out.push({ em: '🐴', label: 'Innings Eater' });
+      if (pit.strike >= C.bench.pitching.strike.elite) out.push({ label: 'Strike Machine' });
+      if (pit.era > 0 && pit.era <= C.bench.pitching.era.elite) out.push({ label: 'Sub-2.00 ERA' });
+      if (pit.kip >= C.bench.pitching.kip.elite) out.push({ label: 'Swing & Miss Stuff' });
+      if (pit.ip >= 15) out.push({ label: 'Innings Eater' });
     }
-    if (f && f.tc >= 12 && f.e === 0) out.push({ em: '🧤', label: 'Error-Free' });
-    if (f && f.tc >= C.minSample.tc && f.fpct >= C.bench.fielding.fpct.elite) out.push({ em: '✨', label: 'Gold Glove Pace' });
+    if (f && f.tc >= 12 && f.e === 0) out.push({ label: 'Error-Free' });
+    if (f && f.tc >= C.minSample.tc && f.fpct >= C.bench.fielding.fpct.elite) out.push({ label: 'Gold Glove Pace' });
 
     // Hot streak
     if (p.batL4 && p.batSeason && p.batL4.ops - p.batSeason.ops >= .200) {
-      out.push({ em: '📈', label: 'Heating Up' });
+      out.push({ label: 'Heating Up' });
     }
 
     return out;

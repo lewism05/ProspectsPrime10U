@@ -226,7 +226,7 @@ P10.Cards = (function () {
     if (ach.length) {
       html += '<div class="bbb-badges">' +
         ach.slice(0, 5).map(function (a) {
-          return '<span class="bbb-badge">' + a.em + ' ' + esc(a.label) + '</span>';
+          return '<span class="bbb-badge">' + esc(a.label) + '</span>';
         }).join('') + '</div>';
     }
 
@@ -283,11 +283,15 @@ P10.Cards = (function () {
 
     host.innerHTML =
       '<div class="card-stage">' +
-        '<div class="bbcard-spin' + (spin ? ' revealing' : '') + '" id="bbSpin">' +
-          '<div class="bbcard" id="bbCard">' +
-            renderFront(p) +
-            renderBack(p, all) +
+        '<div class="card-shell' + (spin ? ' revealing' : '') + '" id="bbShell">' +
+          '<div class="card-drop"></div>' +
+          '<div class="bbcard-spin' + (spin ? ' revealing' : '') + '" id="bbSpin">' +
+            '<div class="bbcard' + (spin ? ' no-transition' : '') + '" id="bbCard">' +
+              renderFront(p) +
+              renderBack(p, all) +
+            '</div>' +
           '</div>' +
+          '<div class="card-impact"></div>' +
         '</div>' +
         '<input type="file" id="bbPhotoInput" accept="image/*" hidden>' +
         '<div class="card-tools">' +
@@ -301,14 +305,24 @@ P10.Cards = (function () {
           'one you add here, and adding one never uploads it anywhere.</div>' +
       '</div>';
 
+    var shellEl = host.querySelector('#bbShell');
     var spinEl = host.querySelector('#bbSpin');
     var cardEl = host.querySelector('#bbCard');
     var input = host.querySelector('#bbPhotoInput');
     var errEl = host.querySelector('#bbErr');
 
     if (spin) {
+      /* Tearing down the reveal needs care. The tumble fills at 720deg; the
+         moment the class comes off, the element's transform drops back to
+         none. With the flip transition live, the browser tweens that as a
+         720-degree spin BACKWARDS. So the transition stays suppressed,
+         we force a reflow to commit the untransformed state, and only then
+         hand control back to the flip. */
       spinEl.addEventListener('animationend', function () {
+        shellEl.classList.remove('revealing');
         spinEl.classList.remove('revealing');
+        void cardEl.offsetWidth;
+        cardEl.classList.remove('no-transition');
       }, { once: true });
     }
 
