@@ -212,6 +212,79 @@ blocked on purpose - it can carry scripts.
 
 ### Getting stats to everyone else
 
+**Uploading a CSV publishes it automatically.** Drop the files in, hit Update
+Dashboard, and it writes `data/team.json` in the repo. Netlify rebuilds and
+every phone and laptop picks it up on next load. Nothing to download, nothing
+to commit by hand.
+
+**Publish For Everyone** in Manage pushes again on demand. Use it after changes
+that are not a CSV upload - lineup overrides, the game log.
+
+The Loaded Data header shows both times, `Updated` and `published`, so a device
+holding changes nobody else has is visible rather than silent.
+
+Two things it will refuse:
+
+- **An empty set.** Publishing nothing would replace a live season with a blank
+  file, so that is rejected outright.
+- **Sample data, without asking.** It warns first. Publishing fake numbers puts
+  them on every family's phone as though they were real.
+
+If publishing is not configured, uploads still work - they just stay on that one
+device, and the app says so instead of implying everyone got them.
+
+---
+
+## Turning on team photo uploads
+
+Until this is set up, Share With Team stays hidden and photos are local-only.
+Four things, once.
+
+### 1. Make a GitHub token
+
+Go to **github.com/settings/personal-access-tokens/new**
+
+- **Repository access:** Only select repositories, and pick this repo alone
+- **Permissions:** Repository permissions > **Contents: Read and write**
+- Generate it and copy it
+
+Scope it to this one repo. A token that can write to everything you own is not
+worth the convenience.
+
+### 2. Put it in Netlify
+
+**Site configuration > Environment variables > Add a variable:**
+
+| Key | Value |
+| --- | --- |
+| `GITHUB_TOKEN` | the token you just copied |
+| `GITHUB_REPO` | `lewism05/ProspectsPrime10U` |
+| `TEAM_CODE` | optional. Set it and families enter it once per device. Leave it out and anyone who finds the endpoint can upload. |
+| `GITHUB_BRANCH` | `main` (only if your default branch is not main) |
+
+The token stays server-side. It is never sent to a browser and never appears in
+the page source.
+
+### 3. Redeploy
+
+**Deploys > Trigger deploy > Deploy site.** Environment variables only take
+effect on a new deploy.
+
+### 4. Decide about the team code
+
+`TEAM_CODE` is optional and it is the whole gate. Set it and families type it
+once per device. Leave it out and photo uploads are open to anyone who finds the
+URL - which is in the page source.
+
+Adding or removing it takes effect on the next deploy. Nothing in the app needs
+changing either way.
+
+**What gets rejected:** anything that is not a JPEG, PNG or WebP; anything over
+700KB; a missing or wrong team code; a request with no player name. SVG is
+blocked on purpose - it can carry scripts.
+
+### Getting stats to everyone else
+
 Uploading only changes **your** browser. To push numbers to parents and players:
 
 **Manage > Publish for Everyone** downloads a `team.json`. Drop it into the
@@ -295,6 +368,7 @@ js/
   cards.js            baseball card: spin, flip, photo upload
 netlify/functions/
   upload-photo.js     commits a shared player photo to the repo
+  publish-data.js     commits data/team.json so stats reach every device
   stats.js            stat extraction, player build, tiers, ranks
   store.js            state, localStorage, publish/load
   insights.js         weakness detection, achievements, team focus
@@ -312,6 +386,10 @@ To test with fake data before your real stats are ready, upload the files in
 ---
 
 ## Troubleshooting
+
+**Stats show on one device but not another.** They were uploaded but not
+published. Open Manage - the Loaded Data header will say `never published`. Hit
+Publish For Everyone.
 
 **A photo shows on one device but not another.** It was saved locally and never
 shared. Open that player's card and hit **Share With Team**.

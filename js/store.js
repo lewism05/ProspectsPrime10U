@@ -207,6 +207,62 @@ P10.Store = (function () {
     emit('meta');
   }
 
+  /* ==================================================================
+     PUBLISH TO EVERY DEVICE
+     Uploading only ever changed this browser. Publishing writes
+     data/team.json in the repo, which is the copy every device reads.
+     ================================================================== */
+  var publishAvailable = null;
+
+  function probePublish() {
+    if (publishAvailable !== null) return Promise.resolve(publishAvailable);
+    return fetch('/.netlify/functions/publish-data', { method: 'GET' })
+      .then(function (r) {
+        if (r.status === 404) return { deployed: false, configured: false, missing: [], codeRequired: true };
+        return r.json().catch(function () {
+          return { deployed: true, configured: false, missing: [], codeRequired: true };
+        });
+      })
+      .then(function (st) { publishAvailable = st; return st; })
+      .catch(function () {
+        publishAvailable = { deployed: false, configured: false, missing: [], codeRequired: true };
+        return publishAvailable;
+      });
+  }
+
+  function publishBundle() {
+    return {
+      app: 'prospects-10u',
+      version: 1,
+      meta: Object.assign({}, state.meta, {
+        updatedAt: new Date().toISOString(),
+        source: 'published'
+      }),
+      data: state.data,
+      games: state.games
+    };
+  }
+
+  function publish(opts) {
+    opts = opts || {};
+    var code = '';
+    try { code = localStorage.getItem(P10.CONFIG.ns + '_teamcode') || ''; } catch (e) {}
+
+    return fetch('/.netlify/functions/publish-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bundle: publishBundle(), code: code, note: opts.note || '' })
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) throw new Error(j.detail ? j.error + ' ' + j.detail : (j.error || 'Publish failed'));
+        state.meta.publishedAt = new Date().toISOString();
+        persist();
+        emit('published-out');
+        return j;
+      });
+    });
+  }
+
   /* ---------------- Export / Import ---------------- */
   function exportBundle() {
     return {
@@ -275,6 +331,9 @@ P10.Store = (function () {
     recompute: recompute,
     isSample: isSample,
     loadSample: loadSample,
+    probePublish: probePublish,
+    publish: publish,
+    publishBundle: publishBundle,
     exportBundle: exportBundle,
     download: download,
     importBundle: importBundle,

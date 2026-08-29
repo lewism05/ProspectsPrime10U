@@ -1006,7 +1006,9 @@ P10.Views = (function () {
 
     /* ---- Loaded data ---- */
     html += '<div class="card mb-16">' +
-      cardHead('Loaded Data', meta.updatedAt ? 'Updated ' + timeAgo(meta.updatedAt) : 'Nothing loaded') +
+      cardHead('Loaded Data',
+        (meta.updatedAt ? 'Updated ' + timeAgo(meta.updatedAt) : 'Nothing loaded') +
+        (meta.publishedAt ? ' · published ' + timeAgo(meta.publishedAt) : ' · never published')) +
       '<div class="card-body">' +
       (loaded.length
         ? '<div class="table-scroll"><table class="stat" style="min-width:420px">' +
@@ -1021,16 +1023,18 @@ P10.Views = (function () {
       '<div class="row gap-8 mt-16" style="flex-wrap:wrap">' +
         '<button class="btn btn-ghost" id="exportData">Export Backup</button>' +
         '<button class="btn btn-ghost" id="importData">Import Backup</button>' +
-        '<button class="btn btn-ghost" id="publishData">Publish for Everyone</button>' +
+        '<button class="btn btn-primary" id="publishData">Publish For Everyone</button>' +
         '<button class="btn btn-ghost" id="loadSample">Load Sample Data</button>' +
         '<button class="btn btn-danger" id="clearData">Clear All Data</button>' +
       '</div>' +
       '<div class="hint mt-8"><strong>Load Sample Data</strong> fills every screen with fake numbers so you ' +
       'can see how the app behaves before real stats exist. A banner appears while it is on, and ' +
       'Clear All Data removes it completely.</div>' +
-      '<div class="hint mt-8"><strong>Publish</strong> downloads a <code>team.json</code> file. Drop it into the ' +
-      '<code>data/</code> folder of your site and redeploy - then every parent sees the new numbers automatically, ' +
-      'with nothing to install and nothing to click.</div>' +
+      '<div class="hint mt-8">Uploading a CSV changes <em>this device</em>. ' +
+      '<strong>Publishing</strong> writes it to the site so every phone and laptop gets it. ' +
+      'A CSV upload publishes on its own; this button is for pushing again after edits ' +
+      'like lineups or the game log.</div>' +
+      '<div id="publishState" class="mt-8"></div>' +
       '</div></div>';
 
     /* ---- Playing time ---- */

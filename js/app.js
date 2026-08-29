@@ -574,6 +574,35 @@
         pendingFiles = [];
         renderAll();
         toast('Dashboard updated from ' + good.length + ' file' + (good.length > 1 ? 's' : ''), 'good');
+
+        /* An upload that only changed this browser is the bug, not the
+           feature. Push it out so every device has it. */
+        /* renderAll() rebuilds the Manage tab, so the element captured
+           before it is detached and writing to it does nothing. Look the
+           status box up fresh every time. */
+        function status(html) {
+          var el = $('publishState') || $('uploadMsg');
+          if (el) el.innerHTML = html;
+        }
+
+        Store.probePublish().then(function (st) {
+          if (!st.configured) {
+            status('<div class="msg msg-warn"><strong>Saved on this device only.</strong> ' +
+              'Publishing is not set up, so nobody else will see these' +
+              (st.missing && st.missing.length ? ' - set ' + esc(st.missing.join(', ')) + ' in Netlify' : '') +
+              '.</div>');
+            return;
+          }
+          status('<div class="msg msg-info">Publishing to every device…</div>');
+          Store.publish({ note: good.length + ' file(s)' }).then(function (res) {
+            renderAll();
+            status('<div class="msg msg-good"><strong>Published.</strong> ' + esc(res.message) + '</div>');
+            toast('Published to every device', 'good');
+          }).catch(function (err) {
+            status('<div class="msg msg-bad">Stats are updated here, but publishing failed: ' +
+              esc(err.message) + ' Use Publish For Everyone to try again.</div>');
+          });
+        });
       } else {
         msg.innerHTML = '<div class="msg msg-bad">Could not read any player rows. ' +
           'Make sure these are CSV exports with a player name column.</div>';
@@ -604,252 +633,53 @@
   }
 
   function publish() {
-    var bundle = {
-      app: 'prospects-10u',
-      version: 1,
-      meta: Object.assign({}, Store.state.meta, {
-        updatedAt: new Date().toISOString(),
-        source: 'published'
-      }),
-      data: Store.state.data,
-      games: Store.state.games
-    };
-    var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'team.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-
-    openModal('Publish to the site',
-      '<div class="msg msg-good"><strong>team.json downloaded.</strong></div>' +
-      '<div class="hint mt-16">Three steps to get it live:</div>' +
-      '<ol class="drill-steps mt-8" style="font-size:13px">' +
-        '<li>Put the downloaded <code>team.json</code> into your site\'s <code>data/</code> folder, replacing the old one.</li>' +
-        '<li>Redeploy - drag the folder onto Netlify, or push to your connected Git repo.</li>' +
-        '<li>Everyone who opens the site now sees the new numbers. Nothing for them to do.</li>' +
-      '</ol>' +
-      '<div class="hint mt-16">Once the daily sync is set up this step happens on its own.</div>');
-  }
-
-
-  /* ==================================================================
-     GAME LOG EDITOR
-     ================================================================== */
-  var editingGame = null;
-
-  function openGameEditor(game) {
-    editingGame = game;
-    openModal(game.opponent ? 'Edit Game' : 'Log A Game',
-      P10.Matchup.editorHtml(game, Store.state),
-      '<button class="btn btn-ghost" data-close-modal>Cancel</button>' +
-      (G_hasId(game) ? '<button class="btn btn-danger" id="gDelete">Delete</button>' : '') +
-      '<button class="btn btn-primary" id="gSave">Save Game</button>');
-  }
-
-  function G_hasId(game) {
-    return P10.GameLog.all().some(function (g) { return g.id === game.id; });
-  }
-
-  /* Read the form back into the game object. */
-  function collectGame() {
-    var g = editingGame;
-    if (!g) return null;
-    g.date = ($('gDate') || {}).value || g.date;
-    g.opponent = (($('gOpp') || {}).value || '').trim();
-    var us = ($('gUs') || {}).value, them = ($('gThem') || {}).value;
-    g.us = us === '' || us === undefined ? null : Number(us);
-    g.them = them === '' || them === undefined ? null : Number(them);
-    g.notes = (($('gNotes') || {}).value || '').trim();
-
-    g.pitchers = [];
-    document.querySelectorAll('#gPitchers .prow').forEach(function (row) {
-      var name = (row.querySelector('.pname') || {}).value || '';
-      if (!name) return;
-      function v(sel) { var e = row.querySelector(sel); return e && e.value !== '' ? Number(e.value) : ''; }
-      g.pitchers.push({
-        name: name, ip: v('.pip'), r: v('.pr'), bb: v('.pbb'), k: v('.pk'), pitches: v('.ppit')
-      });
-    });
-    return g;
-  }
-
-  document.addEventListener('click', function (e) {
-    /* open the editor */
-    if (e.target.closest('#addGame')) { openGameEditor(P10.GameLog.blank()); return; }
-
-    var ed = e.target.closest('[data-edit-game]');
-    if (ed) {
-      var g = P10.GameLog.byId(ed.dataset.editGame);
-      if (g) openGameEditor(JSON.parse(JSON.stringify(g)));
-      return;
-    }
-
-    /* home / away */
-    var side = e.target.closest('#gSide .seg-btn');
-    if (side && editingGame) {
-      document.querySelectorAll('#gSide .seg-btn').forEach(function (b) { b.classList.remove('active'); });
-      side.classList.add('active');
-      editingGame.away = side.dataset.side === 'away';
-      return;
-    }
-
-    /* batting order picker - tap to add in sequence, tap again to remove */
-    var pick = e.target.closest('[data-pick-name]');
-    if (pick && editingGame) {
-      var nm = pick.dataset.pickName;
-      var lu = editingGame.lineup || (editingGame.lineup = []);
-      var at = lu.indexOf(nm);
-      if (at >= 0) lu.splice(at, 1); else if (lu.length < 12) lu.push(nm);
-      var host = $('gLineup');
-      if (host) {
-        host.querySelectorAll('[data-pick-name]').forEach(function (btn) {
-          var i = lu.indexOf(btn.dataset.pickName);
-          btn.classList.toggle('on', i >= 0);
-          var badge = btn.querySelector('.pk-n');
-          if (i >= 0) {
-            if (badge) badge.textContent = i + 1;
-            else btn.insertAdjacentHTML('afterbegin', '<span class="pk-n">' + (i + 1) + '</span>');
-          } else if (badge) badge.remove();
-        });
-      }
-      return;
-    }
-
-    /* pitcher rows */
-    if (e.target.closest('#gAddPitcher') && editingGame) {
-      collectGame();
-      var host2 = $('gPitchers');
-      var idx = host2.querySelectorAll('.prow').length;
-      host2.insertAdjacentHTML('beforeend',
-        P10.Matchup.pitcherRow({ name: '', ip: '', r: '', bb: '', k: '', pitches: '' }, idx, Store.state.players));
-      return;
-    }
-    var drop = e.target.closest('[data-drop-pitcher]');
-    if (drop && editingGame) {
-      var row = drop.closest('.prow');
-      if (row) row.remove();
-      return;
-    }
-
-    /* save / delete */
-    if (e.target.closest('#gSave') && editingGame) {
-      var game = collectGame();
-      if (!game.opponent) {
-        toast('Add an opponent name first', 'bad');
+    var btn = $('publishData');
+    Store.probePublish().then(function (st) {
+      if (!st.configured) {
+        openModal('Publishing is not set up',
+          '<div class="msg msg-warn">This site cannot publish yet' +
+          (st.missing && st.missing.length
+            ? ', because ' + esc(st.missing.join(' and ')) + ' ' +
+              (st.missing.length > 1 ? 'are' : 'is') + ' not set in Netlify.'
+            : '.') + '</div>' +
+          '<div class="hint mt-16">Until then, stats only exist on the device that uploaded them. ' +
+          'Set those variables in Netlify, redeploy, and this button pushes to everyone.</div>');
         return;
       }
-      P10.GameLog.upsert(game);
-      editingGame = null;
-      closeModal();
-      renderAll();
-      toast('Game logged', 'good');
-      return;
-    }
-    if (e.target.closest('#gDelete') && editingGame) {
-      P10.GameLog.remove(editingGame.id);
-      editingGame = null;
-      closeModal();
-      renderAll();
-      toast('Game removed', 'info');
-      return;
-    }
-  });
 
+      if (Store.isSample()) {
+        openModal('Publish sample data?',
+          '<div class="msg msg-bad"><strong>These are made-up numbers.</strong> ' +
+          'Publishing puts them on every family\'s phone as if they were real.</div>' +
+          '<div class="hint mt-16">Fine for testing that the pipeline works. Not fine to leave up. ' +
+          'Upload real stats afterwards and publish again to replace them.</div>',
+          '<button class="btn btn-ghost" data-close-modal>Cancel</button>' +
+          '<button class="btn btn-danger" id="confirmPublishSample">Publish Anyway</button>');
+        return;
+      }
 
-  /* ==================================================================
-     TEAM PHOTOS
-     ================================================================== */
+      doPublish(btn);
+    });
+  }
+
+  function doPublish(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Publishing…'; }
+    Store.publish({ note: 'manual' }).then(function (res) {
+      closeModal();
+      openModal('Published',
+        '<div class="msg msg-good"><strong>' + esc(res.message) + '</strong></div>' +
+        '<div class="hint mt-16">Netlify rebuilds on the commit. Anyone with the site open ' +
+        'picks it up next time they load it or switch back to the tab.</div>');
+      renderAll();
+    }).catch(function (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Publish For Everyone'; }
+      closeModal();
+      openModal('Could not publish', '<div class="msg msg-bad">' + esc(err.message) + '</div>');
+    });
+  }
+
   document.addEventListener('click', function (e) {
-    /* tap a cell to set that player's photo */
-    var cell = e.target.closest('[data-photo-player]');
-    if (cell) {
-      var name = cell.dataset.photoPlayer;
-      var inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = 'image/*';
-      inp.onchange = function () {
-        var f = this.files && this.files[0];
-        if (!f) return;
-        P10.Cards.processImage(f).then(function (url) {
-          if (!P10.Cards.setPhoto(name, url)) {
-            toast('Not enough space. Clear a photo and try again.', 'bad');
-            return;
-          }
-          V.renderManage(Store.state);
-          wireUpload();
-          toast('Photo set for ' + name, 'good');
-        }).catch(function (err) { toast(err.message || 'Could not read that image', 'bad'); });
-      };
-      inp.click();
-      return;
-    }
-
-    /* save every local photo as a correctly-named file */
-    if (e.target.closest('#downloadPhotos')) {
-      var saved = 0;
-      Store.state.players.forEach(function (p, i) {
-        var data = P10.Cards.getPhoto(p.name);
-        if (!data) return;
-        saved++;
-        // Stagger the saves; browsers drop rapid-fire downloads.
-        setTimeout(function () {
-          var a = document.createElement('a');
-          a.href = data;
-          a.download = P10.Cards.slug(p.name) + '.jpg';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }, i * 320);
-      });
-      // The manifest has to ship alongside the images or the site will not
-      // know to look for them.
-      if (saved) {
-        var slugs = Store.state.players
-          .filter(function (p) { return P10.Cards.getPhoto(p.name); })
-          .map(function (p) { return P10.Cards.slug(p.name); });
-        setTimeout(function () {
-          var man = new Blob([JSON.stringify({
-            note: 'Slugs of players who have a team photo in assets/players/.',
-            players: slugs
-          }, null, 2)], { type: 'application/json' });
-          var url = URL.createObjectURL(man);
-          var a = document.createElement('a');
-          a.href = url; a.download = 'photos.json';
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-        }, saved * 320 + 200);
-      }
-
-      if (!saved) {
-        toast('No photos added yet - tap a player above first', 'info');
-      } else {
-        openModal('Photo pack',
-          '<div class="msg msg-good"><strong>' + saved + ' photo' + (saved > 1 ? 's' : '') +
-          ' downloading.</strong></div>' +
-          '<div class="hint mt-16">To put them on every device:</div>' +
-          '<ol class="drill-steps mt-8" style="font-size:13px">' +
-            '<li>Move the <code>.jpg</code> files into <code>assets/players/</code>.</li>' +
-            '<li>Move <code>photos.json</code> into <code>data/</code>, replacing the old one. ' +
-              'Without it the site will not know the photos are there.</li>' +
-            '<li>Commit and push. Netlify redeploys in about 40 seconds.</li>' +
-            '<li>Every parent, on every phone, now sees them. Nothing for them to do.</li>' +
-          '</ol>' +
-          '<div class="hint mt-16">The names are already correct, so do not rename them.</div>');
-      }
-      return;
-    }
-
-    if (e.target.closest('#clearPhotos')) {
-      Store.state.players.forEach(function (p) { P10.Cards.clearPhoto(p.name); });
-      V.renderManage(Store.state);
-      wireUpload();
-      toast('Local photos cleared. Team photos are untouched.', 'info');
-      return;
-    }
+    if (e.target.closest('#confirmPublishSample')) { doPublish($('publishData')); }
   });
 
   /* ==================================================================
