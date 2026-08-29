@@ -1,0 +1,15 @@
+{
+  "app": "prospects-10u",
+  "version": 1,
+  "meta": {
+    "updatedAt": null,
+    "source": "seed",
+    "note": "Replace this file with the team.json produced by Manage > Publish, or by the daily sync."
+  },
+  "data": {
+    "batting": {},
+    "pitching": {},
+    "fielding": {},
+    "catching": {}
+  }
+}

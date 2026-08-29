@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prospects 10U Baseball</title>
+<meta name="description" content="Official stat hub for Prospects 10U Baseball - team and player stats, schedule, lineups and player development.">
+<meta name="theme-color" content="#07090C">
+
+<link rel="icon" href="assets/icon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+
+<meta property="og:title" content="Prospects 10U Baseball">
+<meta property="og:description" content="Team and player stats, schedule and development for Prospects 10U.">
+<meta property="og:image" content="assets/icon-512.png">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============================ TOP NAV ============================ -->
+  <header class="topnav">
+    <div class="wrap topnav-inner">
+      <a class="brand" href="#" id="brandHome">
+        <img class="brand-mark" src="assets/mark.png" alt="Prospects">
+        <span class="brand-text">
+          <span class="brand-name">Prospects</span>
+          <span class="brand-sub">10U Baseball</span>
+        </span>
+      </a>
+
+      <div class="topnav-spacer"></div>
+
+      <div class="topnav-actions">
+        <span class="coach-chip hidden" id="coachChip">Coach</span>
+        <button class="live-pill" id="livePill" title="Data status - click to refresh">
+          <span class="live-dot off" id="liveDot"></span>
+          <span class="live-label" id="liveLabel">No data</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">⚙</button>
+        <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================ SUB NAV ============================ -->
+  <nav class="subnav" id="subnav">
+    <div class="wrap subnav-inner" id="subnavInner">
+      <button class="navtab active" data-tab="dashboard">Dashboard</button>
+      <button class="navtab" data-tab="roster">Roster</button>
+      <button class="navtab" data-tab="batting">Batting</button>
+      <button class="navtab" data-tab="pitching">Pitching</button>
+      <button class="navtab" data-tab="defense">Defense</button>
+      <button class="navtab" data-tab="schedule">Schedule</button>
+      <button class="navtab" data-tab="development">Development</button>
+      <button class="navtab coach-only" data-tab="lineup">Lineup <span class="lock">🔒</span></button>
+      <button class="navtab coach-only" data-tab="manage">Manage <span class="lock">🔒</span></button>
+    </div>
+  </nav>
+
+  <!-- ============================ HERO ============================ -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <img class="hero-logo" src="assets/logo.png" alt="Prospects 10U Baseball">
+      <div class="hero-copy">
+        <div class="eyebrow" id="heroEyebrow">2026 Season · 10U Travel</div>
+        <h1 class="hero-title">Prospects 10U</h1>
+        <div class="hero-meta" id="heroMeta"></div>
+      </div>
+      <div class="hero-record" id="heroRecord"></div>
+    </div>
+  </section>
+
+  <main class="main">
+    <div class="wrap">
+
+      <!-- ==================== STAT WINDOW TOGGLE ==================== -->
+      <section class="row gap-12 mt-16" id="windowBar" style="flex-wrap:wrap;justify-content:space-between">
+        <div class="row gap-8">
+          <span class="eyebrow">Showing</span>
+          <div class="seg" id="windowSeg">
+            <button class="seg-btn active" data-window="season">Full Season</button>
+            <button class="seg-btn" data-window="last_8">Last 8</button>
+            <button class="seg-btn" data-window="last_4">Last 4</button>
+          </div>
+        </div>
+        <div class="row gap-8" id="windowNote"></div>
+      </section>
+
+      <!-- ==================== DASHBOARD ==================== -->
+      <section class="page active" id="page-dashboard">
+        <div class="statbar" id="statbar"></div>
+        <div id="dashboardBody"></div>
+      </section>
+
+      <!-- ==================== ROSTER ==================== -->
+      <section class="page" id="page-roster">
+        <div class="section-head">
+          <div>
+            <h2>Roster</h2>
+            <div class="section-sub" id="rosterSub"></div>
+          </div>
+          <div class="seg" id="rosterSort">
+            <button class="seg-btn active" data-sort="ops">By OPS</button>
+            <button class="seg-btn" data-sort="num">By Number</button>
+            <button class="seg-btn" data-sort="name">By Name</button>
+          </div>
+        </div>
+        <div class="grid g-cards" id="rosterGrid"></div>
+      </section>
+
+      <!-- ==================== BATTING ==================== -->
+      <section class="page" id="page-batting">
+        <div id="battingBody"></div>
+      </section>
+
+      <!-- ==================== PITCHING ==================== -->
+      <section class="page" id="page-pitching">
+        <div id="pitchingBody"></div>
+      </section>
+
+      <!-- ==================== DEFENSE ==================== -->
+      <section class="page" id="page-defense">
+        <div id="defenseBody"></div>
+      </section>
+
+      <!-- ==================== SCHEDULE ==================== -->
+      <section class="page" id="page-schedule">
+        <div id="scheduleBody"></div>
+      </section>
+
+      <!-- ==================== DEVELOPMENT ==================== -->
+      <section class="page" id="page-development">
+        <div id="developmentBody"></div>
+      </section>
+
+      <!-- ==================== LINEUP (coach) ==================== -->
+      <section class="page" id="page-lineup">
+        <div id="lineupBody"></div>
+      </section>
+
+      <!-- ==================== MANAGE (coach) ==================== -->
+      <section class="page" id="page-manage">
+        <div id="manageBody"></div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <div class="foot-brand">
+        <img src="assets/mark.png" alt="">
+        <span>Prospects 10U Baseball · <span id="footSeason">2026</span></span>
+      </div>
+      <div id="footMeta"></div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ============================ PLAYER DRAWER ============================ -->
+<div class="drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-label="Player detail">
+  <div class="drawer-head">
+    <button class="drawer-close" id="drawerClose" aria-label="Close">×</button>
+    <div class="drawer-id">
+      <div class="drawer-num" id="drawerNum">—</div>
+      <div>
+        <div class="drawer-name" id="drawerName">Player</div>
+        <div class="drawer-role" id="drawerRole"></div>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<!-- ============================ MODAL ============================ -->
+<div class="modal-scrim" id="modalScrim">
+  <div class="modal" role="dialog" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 class="card-title" id="modalTitle">Settings</h3>
+      <button class="drawer-close" id="modalClose" style="position:static" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<!-- Chart.js is vendored locally so the site works with no CDN dependency. -->
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/store.js"></script>
+<script src="js/drills.js"></script>
+<script src="js/insights.js"></script>
+<script src="js/lineup.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/views.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

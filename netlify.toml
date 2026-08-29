@@ -1,0 +1,40 @@
+[build]
+  publish = "."
+  command = ""
+
+# team.json must never be cached - it is how new stats reach everyone.
+[[headers]]
+  for = "/data/team.json"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# The shell should revalidate so deploys land immediately.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Code and assets are safe to cache for a day.
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Basic hardening.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
