@@ -16,8 +16,17 @@
 
      GITHUB_TOKEN   fine-grained token, THIS REPO ONLY, Contents: Read+Write
      GITHUB_REPO    lewism05/ProspectsPrime10U
-     TEAM_CODE      the code you give families so strangers cannot upload
      GITHUB_BRANCH  optional, defaults to main
+
+     TEAM_CODE      OPTIONAL, and it is the on/off switch for the gate:
+                      set   - families must enter it once per device
+                      unset - anyone who reaches this URL can upload
+
+   Leaving TEAM_CODE unset is a deliberate trade. The endpoint is named in
+   the page source, so with no code anyone who finds it can replace a
+   player's photo. Everything is a git commit, so anything unwanted is one
+   revert away - but it would be live on the site until somebody noticed.
+   Set TEAM_CODE again at any time to close it back up; no code change.
    ========================================================================== */
 
 const MAX_BYTES = 700 * 1024;          // generous; the client sends ~80KB
@@ -140,11 +149,12 @@ exports.handler = async function (event) {
     const missing = [];
     if (!cfg.token) missing.push('GITHUB_TOKEN');
     if (!cfg.repo) missing.push('GITHUB_REPO');
-    if (!cfg.code) missing.push('TEAM_CODE');
     return reply(200, {
       deployed: true,
       configured: missing.length === 0,
-      missing: missing
+      missing: missing,
+      // The client only prompts when there is actually a code to enter.
+      codeRequired: !!cfg.code
     });
   }
 
@@ -163,16 +173,23 @@ exports.handler = async function (event) {
 
   const { player, image, code } = payload;
 
-  /* A gate is not optional. Without one, anyone who finds this URL can
-     write files into the repo. */
+  /* The code is enforced only when one is configured. With TEAM_CODE unset
+     the gate is deliberately open - see the note at the top of this file. */
   if (cfg.code && code !== cfg.code) {
     return reply(401, { error: 'That team code is not right.' });
   }
+
+  /* With no code, this is the only thing standing between the endpoint and
+     a passing script. A browser cannot forge Origin, so it blocks casual
+     drive-by abuse from another site. It does NOT stop anything running
+     outside a browser, where headers are whatever the caller says they
+     are - it is a speed bump, not a lock. */
   if (!cfg.code) {
-    return reply(503, {
-      error: 'Uploads are switched off.',
-      detail: 'TEAM_CODE is not set in Netlify, so uploads stay closed rather than open to anyone.'
-    });
+    const origin = event.headers.origin || event.headers.referer || '';
+    const host = event.headers.host || '';
+    if (origin && host && origin.indexOf(host) < 0) {
+      return reply(403, { error: 'Uploads only work from the team site.' });
+    }
   }
 
   if (!player || typeof player !== 'string') return reply(400, { error: 'Which player is this?' });

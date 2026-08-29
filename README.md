@@ -130,17 +130,25 @@ a short scouting line generated from what the numbers actually say.
 up so the whole team sees it.
 
 Tap the card, pick a photo. That is the whole thing - it saves on the device
-and shares with the team by itself. The first time, it asks for the team code
-and explains that the photo is about to go on every family's phone; after that
-it is remembered and sharing is silent.
+and shares with the team by itself, no code, no second step.
 
 A small label under the card always says which state a photo is in - **Shared
 with the team** or **Saved on this device only** - so a photo that never made it
 up does not sit there looking finished. If sharing fails, the photo still saves
 locally and a **Try Sharing Again** button appears.
 
-Leaving the code prompt blank keeps the photo local. Nothing is ever published
-without the code being entered.
+**On the open door.** `TEAM_CODE` is the switch. With it unset, uploads need no
+code - which also means anyone who finds the endpoint can replace a player's
+photo, because the URL is named in the page source. A same-origin check blocks
+casual drive-by attempts from other sites, but it is a speed bump, not a lock;
+anything running outside a browser sets its own headers.
+
+Everything is a git commit, so anything unwanted is one revert away in GitHub.
+But it would be live on the site until somebody noticed.
+
+To close it back up, add `TEAM_CODE` in Netlify and redeploy. The app picks it
+up on its own and starts asking families for it once per device. No code change
+either direction.
 
 Behind that button is a small Netlify function that commits the file into
 `assets/players/` and updates `data/photos.json`. Netlify redeploys on the
@@ -178,7 +186,7 @@ worth the convenience.
 | --- | --- |
 | `GITHUB_TOKEN` | the token you just copied |
 | `GITHUB_REPO` | `lewism05/ProspectsPrime10U` |
-| `TEAM_CODE` | a code you give families, e.g. `prospects2026` |
+| `TEAM_CODE` | optional. Set it and families enter it once per device. Leave it out and anyone who finds the endpoint can upload. |
 | `GITHUB_BRANCH` | `main` (only if your default branch is not main) |
 
 The token stays server-side. It is never sent to a browser and never appears in
@@ -189,13 +197,14 @@ the page source.
 **Deploys > Trigger deploy > Deploy site.** Environment variables only take
 effect on a new deploy.
 
-### 4. Give families the team code
+### 4. Decide about the team code
 
-That is the whole gate. Without it, anyone who found the function's URL could
-write files into your repo, so uploads stay switched off until `TEAM_CODE` is
-set rather than defaulting to open.
+`TEAM_CODE` is optional and it is the whole gate. Set it and families type it
+once per device. Leave it out and photo uploads are open to anyone who finds the
+URL - which is in the page source.
 
-If you ever need to shut uploads off, delete `TEAM_CODE` and redeploy.
+Adding or removing it takes effect on the next deploy. Nothing in the app needs
+changing either way.
 
 **What gets rejected:** anything that is not a JPEG, PNG or WebP; anything over
 700KB; a missing or wrong team code; a request with no player name. SVG is
@@ -311,8 +320,9 @@ shared. Open that player's card and hit **Share With Team**.
 configured - see "Turning on team photo uploads". Photos still work locally in
 the meantime.
 
-**"Uploads are switched off."** `TEAM_CODE` is not set in Netlify. That is
-deliberate: uploads stay closed rather than open to anybody who finds the URL.
+**Somebody uploaded a photo you did not want.** Open the repo's commit history
+on GitHub, find the "Team photo for ..." commit and revert it. Then set
+`TEAM_CODE` in Netlify and redeploy to close the door.
 
 **A player shows no stats.** Their name in GameChanger does not match
 `js/config.js`. The matcher handles `Last, First`, suffixes like Jr., and

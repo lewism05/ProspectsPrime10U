@@ -169,11 +169,11 @@ P10.Cards = (function () {
     if (uploadAvailable !== null) return Promise.resolve(uploadAvailable);
     return fetch('/.netlify/functions/upload-photo', { method: 'GET' })
       .then(function (r) {
-        if (r.status === 404) return { deployed: false, configured: false, missing: [] };
+        if (r.status === 404) return { deployed: false, configured: false, missing: [], codeRequired: true };
         return r.json().catch(function () {
           // An older deploy answers 405 with no body; treat that as unknown
           // but usable, so it fails loudly on POST rather than silently here.
-          return { deployed: true, configured: true, missing: [] };
+          return { deployed: true, configured: true, missing: [], codeRequired: true };
         });
       })
       .then(function (st) { uploadAvailable = st; return st; })
@@ -398,8 +398,8 @@ P10.Cards = (function () {
       return 'Saved on this device. Use Share With Team to put it on the card for ' +
              'every family, on every phone.';
     }
-    return 'Add a photo and it saves here. Share it with the team and it goes on the ' +
-           'card for everybody.';
+    return 'Add a photo and it goes on this card for the whole team - every family, ' +
+           'every phone.';
   }
 
   /* ================= mount ================= */
@@ -559,20 +559,17 @@ P10.Cards = (function () {
       var data = getPhoto(p.name);
       if (!data) return Promise.resolve(false);
 
+      /* Only ask for a code when the server actually wants one. With
+         TEAM_CODE unset there is nothing to enter, so prompting would be
+         asking for a password that does not exist. */
+      var needsCode = !(uploadAvailable && uploadAvailable.codeRequired === false);
       var code = getCode();
-      if (!code) {
-        if (opts.silentIfNoCode) {
-          // No code yet and we are mid-upload: ask, but frame it as what
-          // it is rather than as an error.
-          code = window.prompt(
-            'Team code\n\nAdding ' + p.name + '\'s photo for the whole team - every ' +
-            'family, every phone. Your coach has the code.\n\n' +
-            'Leave this blank to keep the photo on this device only.');
-        } else {
-          code = window.prompt(
-            'Team code\n\nThis puts ' + p.name + '\'s photo on the card for every ' +
-            'family, on every device. Your coach has the code.');
-        }
+
+      if (needsCode && !code) {
+        code = window.prompt(
+          'Team code\n\nAdding ' + p.name + '\'s photo for the whole team - every ' +
+          'family, every phone. Your coach has the code.\n\n' +
+          'Leave this blank to keep the photo on this device only.');
         if (!code || !code.trim()) {
           setState('Saved on this device only', 'warn');
           if (shareBtn) shareBtn.classList.remove('hidden');
@@ -584,8 +581,8 @@ P10.Cards = (function () {
       if (shareBtn) { shareBtn.disabled = true; shareBtn.textContent = 'Sending…'; }
       setState('Sharing with the team…', 'busy');
 
-      return uploadToTeam(p.name, data, code).then(function (res) {
-        setCode(code);
+      return uploadToTeam(p.name, data, code || '').then(function (res) {
+        if (code) setCode(code);
         markShared(p.name);
         setState('Shared with the team', 'good');
         say('<strong>Done.</strong> ' + esc(res.message), 'good');
