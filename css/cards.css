@@ -87,6 +87,9 @@
 /* While the reveal runs, the flip transition must stay out of the way or it
    fights the animation on the way out and spins the card backwards. */
 .bbcard.no-transition { transition: none !important; }
+/* Belt and braces: if anything ever leaves .revealing stuck on, the flipped
+   state must still win so the back can never render mirrored. */
+.bbcard.flipped { animation: none !important; transform: rotateY(180deg) !important; }
 
 @keyframes cardTumble {
   0%   { transform: rotateY(0deg)   rotateX(9deg)  rotateZ(-5deg); }

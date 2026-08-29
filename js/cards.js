@@ -311,19 +311,46 @@ P10.Cards = (function () {
     var input = host.querySelector('#bbPhotoInput');
     var errEl = host.querySelector('#bbErr');
 
+    /* ------------------------------------------------------------------
+       Ending the reveal cleanly is the whole ballgame here.
+
+       While `.revealing` is on, the cardTumble animation owns the card's
+       transform and beats the `.flipped` class outright. If the reveal is
+       never torn down, clicking Flip appears to do nothing except show the
+       back through a card that is not actually at 180 degrees - which
+       renders every word on it mirrored.
+
+       animationend alone is not enough to guarantee teardown. It does not
+       fire when the tab is backgrounded mid-animation, when reduced-motion
+       has disabled the animation entirely, or when the element is detached
+       and re-mounted. So: listen, but also arm a timer, and tear down
+       immediately if the reader flips before the reveal has finished.
+
+       The teardown order matters too. The tumble fills at 720deg, so the
+       instant the class comes off, transform drops to none. With the flip
+       transition live that gets tweened as a full spin BACKWARDS - hence
+       suppressing the transition, forcing a reflow to commit the
+       untransformed state, and only then handing control to the flip.
+       ------------------------------------------------------------------ */
+    var REVEAL_MS = 1250;
+    var revealDone = !spin;
+
+    function endReveal() {
+      if (revealDone) return;
+      revealDone = true;
+      shellEl.classList.remove('revealing');
+      spinEl.classList.remove('revealing');
+      void cardEl.offsetWidth;
+      cardEl.classList.remove('no-transition');
+    }
+
     if (spin) {
-      /* Tearing down the reveal needs care. The tumble fills at 720deg; the
-         moment the class comes off, the element's transform drops back to
-         none. With the flip transition live, the browser tweens that as a
-         720-degree spin BACKWARDS. So the transition stays suppressed,
-         we force a reflow to commit the untransformed state, and only then
-         hand control back to the flip. */
-      spinEl.addEventListener('animationend', function () {
-        shellEl.classList.remove('revealing');
-        spinEl.classList.remove('revealing');
-        void cardEl.offsetWidth;
-        cardEl.classList.remove('no-transition');
-      }, { once: true });
+      spinEl.addEventListener('animationend', function (e) {
+        // Child animations bubble; only the wrapper's own run ends the reveal.
+        if (e.target !== spinEl) return;
+        endReveal();
+      });
+      setTimeout(endReveal, REVEAL_MS + 300);
     }
 
     function showErr(msg) {
@@ -333,8 +360,20 @@ P10.Cards = (function () {
     function clearErr() { errEl.classList.add('hidden'); errEl.textContent = ''; }
 
     host.querySelector('#bbFlip').addEventListener('click', function () {
+      endReveal();
       cardEl.classList.toggle('flipped');
       this.textContent = cardEl.classList.contains('flipped') ? 'Show Front' : 'Flip Card';
+    });
+
+    /* Tapping the card flips it. People expect that from a card, and it
+       makes the flip discoverable without hunting for the button. Taps on
+       the empty portrait still open the photo picker instead. */
+    cardEl.addEventListener('click', function (e) {
+      if (e.target.closest('.bbf-empty')) return;
+      endReveal();
+      cardEl.classList.toggle('flipped');
+      var fb = host.querySelector('#bbFlip');
+      if (fb) fb.textContent = cardEl.classList.contains('flipped') ? 'Show Front' : 'Flip Card';
     });
 
     function pick() { clearErr(); input.click(); }
