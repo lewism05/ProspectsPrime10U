@@ -133,14 +133,26 @@ P10.Cards = (function () {
     try { v ? localStorage.setItem(CODE_KEY, v) : localStorage.removeItem(CODE_KEY); } catch (e) {}
   }
 
-  /* Ask the function whether it is configured. A GET gets a 405 from a
-     live function and a 404 when there is none, which is enough to tell
-     the two apart without uploading anything. */
+  /* Ask the function whether uploads actually WORK, not just whether the
+     file deployed. Those are different states and the difference matters:
+     a deployed but unconfigured function fails every upload, so offering
+     the button would be worse than hiding it. */
   function probeUpload() {
     if (uploadAvailable !== null) return Promise.resolve(uploadAvailable);
     return fetch('/.netlify/functions/upload-photo', { method: 'GET' })
-      .then(function (r) { uploadAvailable = r.status !== 404; return uploadAvailable; })
-      .catch(function () { uploadAvailable = false; return false; });
+      .then(function (r) {
+        if (r.status === 404) return { deployed: false, configured: false, missing: [] };
+        return r.json().catch(function () {
+          // An older deploy answers 405 with no body; treat that as unknown
+          // but usable, so it fails loudly on POST rather than silently here.
+          return { deployed: true, configured: true, missing: [] };
+        });
+      })
+      .then(function (st) { uploadAvailable = st; return st; })
+      .catch(function () {
+        uploadAvailable = { deployed: false, configured: false, missing: [] };
+        return uploadAvailable;
+      });
   }
 
   function uploadToTeam(playerName, dataUrl, code) {
@@ -487,15 +499,24 @@ P10.Cards = (function () {
     var shareBtn = host.querySelector('#bbShare');
     var msgEl = host.querySelector('#bbMsg');
 
-    function say(text, kind) {
+    function say(text, kind) {  // eslint-disable-line no-inner-declarations
       if (!msgEl) return;
       msgEl.className = 'card-msg msg msg-' + (kind || 'info');
       msgEl.innerHTML = text;
     }
 
     if (shareBtn) {
-      probeUpload().then(function (ok) {
-        if (ok) shareBtn.classList.remove('hidden');
+      probeUpload().then(function (st) {
+        if (st.configured) {
+          shareBtn.classList.remove('hidden');
+        } else if (st.deployed && st.missing && st.missing.length) {
+          /* Deployed but not switched on. Say so, and say exactly what is
+             missing - the coach is the only person who can fix it and they
+             should not have to guess. */
+          say('<strong>Sharing is not switched on yet.</strong> This photo is saved on ' +
+              'this device only. Coach: set ' + esc(st.missing.join(', ')) +
+              ' in Netlify and redeploy.', 'warn');
+        }
       });
 
       shareBtn.addEventListener('click', function () {

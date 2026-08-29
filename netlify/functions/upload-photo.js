@@ -124,14 +124,31 @@ async function addToManifest(cfg, slug) {
 }
 
 exports.handler = async function (event) {
-  if (event.httpMethod !== 'POST') return reply(405, { error: 'Use POST' });
-
   const cfg = {
     token: process.env.GITHUB_TOKEN,
     repo: process.env.GITHUB_REPO,
     branch: process.env.GITHUB_BRANCH || 'main',
     code: process.env.TEAM_CODE
   };
+
+  /* A GET reports whether uploads are actually usable, not merely whether
+     this file got deployed. The client needs the difference: a deployed but
+     unconfigured function means the Share button would fail every time, and
+     a button that cannot work should not be on screen. No secrets here -
+     only whether each variable is present. */
+  if (event.httpMethod === 'GET') {
+    const missing = [];
+    if (!cfg.token) missing.push('GITHUB_TOKEN');
+    if (!cfg.repo) missing.push('GITHUB_REPO');
+    if (!cfg.code) missing.push('TEAM_CODE');
+    return reply(200, {
+      deployed: true,
+      configured: missing.length === 0,
+      missing: missing
+    });
+  }
+
+  if (event.httpMethod !== 'POST') return reply(405, { error: 'Use POST' });
 
   if (!cfg.token || !cfg.repo) {
     return reply(503, {
