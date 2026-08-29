@@ -277,6 +277,13 @@
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { closeModal(); closeDrawer(); closeNav(); }
+
+    /* Tiles are divs with role=button, so they need this to be operable
+       from a keyboard the way a real button already would be. */
+    if (e.key === 'Enter' || e.key === ' ') {
+      var t = e.target.closest && e.target.closest('.tile-link');
+      if (t) { e.preventDefault(); t.click(); }
+    }
   });
 
   /* ==================================================================

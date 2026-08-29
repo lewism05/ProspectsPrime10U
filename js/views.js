@@ -76,11 +76,11 @@ P10.Views = (function () {
     var meta = [];
 
     meta.push(heroTag('Season', C.team.season));
-    meta.push(heroTag('Roster', C.roster.length + ' Players'));
+    meta.push(heroTag('Roster', C.roster.length + ' Players', 'roster'));
     if (C.team.homeField) meta.push(heroTag('Home', C.team.homeField));
 
     var nx = Sch.next();
-    if (nx) meta.push(heroTag('Next', (nx.opponent || 'TBD') + ' · ' + Sch.countdownText(nx)));
+    if (nx) meta.push(heroTag('Next', (nx.opponent || 'TBD') + ' · ' + Sch.countdownText(nx), 'schedule'));
 
     set('heroMeta', meta.join(''));
 
@@ -97,8 +97,10 @@ P10.Views = (function () {
     set('footSeason', esc(C.team.season));
   }
 
-  function heroTag(label, value) {
-    return '<span class="hero-tag"><b>' + esc(label) + '</b>' + esc(value) + '</span>';
+  function heroTag(label, value, to) {
+    if (!to) return '<span class="hero-tag"><b>' + esc(label) + '</b>' + esc(value) + '</span>';
+    return '<button class="hero-tag hero-tag-link" data-goto="' + esc(to) + '">' +
+      '<b>' + esc(label) + '</b>' + esc(value) + '</button>';
   }
 
   function recBlock(val, lab) {
@@ -110,10 +112,12 @@ P10.Views = (function () {
 
     if (!t || !t.withData) {
       set('statbar',
-        tile('Roster', C.roster.length, '', '') +
+        tile('Roster', C.roster.length, '', 'See the players', false, 'roster') +
         tile('Division', C.team.ageGroup, '', '') +
-        tile('Season', C.team.season, '', '') +
-        tile('Status', 'Awaiting stats', '', '', true));
+        tile('Season', C.team.season, '', C.schedule.length ? 'See the schedule' : '', false,
+             C.schedule.length ? 'schedule' : null) +
+        tile('Status', 'Awaiting stats', '', '', true,
+             P10.Store.state.coach ? 'manage' : null));
       return;
     }
 
@@ -128,37 +132,52 @@ P10.Views = (function () {
     var html = '';
     html += tile('Team OPS', S.rate(t.ops),
       opsDelta ? (opsDelta > 0 ? 'up' : 'down') : '',
-      (opsDelta ? (opsDelta > 0 ? '▲ ' : '▼ ') + S.rate(Math.abs(opsDelta)) + ' last 4' : 'Steady'));
+      (opsDelta ? (opsDelta > 0 ? '▲ ' : '▼ ') + S.rate(Math.abs(opsDelta)) + ' last 4' : 'Steady'),
+      false, 'batting');
 
     html += tile('Team OBP', S.rate(t.obp), '',
-      S.gradeLabel(S.grade('batting', 'obp', t.obp)) + ' for 10U');
+      S.gradeLabel(S.grade('batting', 'obp', t.obp)) + ' for 10U', false, 'batting');
 
     if (t.ip > 0) {
       html += tile('Team ERA', S.fixed(t.era, 2), '',
-        Math.round(t.strikePct * 100) + '% strikes · ' + S.fixed(t.bbPerIp, 2) + ' BB/IP');
+        Math.round(t.strikePct * 100) + '% strikes · ' + S.fixed(t.bbPerIp, 2) + ' BB/IP',
+        false, 'pitching');
     } else {
-      html += tile('Team AVG', S.rate(t.avg), '', t.h + ' hits in ' + t.ab + ' AB');
+      html += tile('Team AVG', S.rate(t.avg), '', t.h + ' hits in ' + t.ab + ' AB', false, 'batting');
     }
 
     if (hot) {
       var d = hot.batL4.ops - (hot.batSeason ? hot.batSeason.ops : 0);
       html += tile('Hottest Bat', hot.short, d > 0 ? 'up' : '',
-        S.rate(hot.batL4.ops) + ' OPS last 4', true);
+        S.rate(hot.batL4.ops) + ' OPS last 4', true, { player: hot.name });
     }
 
     if (arm) {
       html += tile('Top Arm', arm.player.short, 'up',
-        Math.round(arm.strike * 100) + '% strikes · ' + S.fixed(arm.era, 2) + ' ERA', true);
+        Math.round(arm.strike * 100) + '% strikes · ' + S.fixed(arm.era, 2) + ' ERA',
+        true, { player: arm.player.name });
     }
 
     set('statbar', html);
   }
 
-  function tile(lab, val, trendCls, trendTxt, isText) {
-    return '<div class="tile">' +
+  /* Every tile is a door. A number on a dashboard that cannot be opened is
+     a dead end - you read it, you wonder why, and there is nowhere to go.
+     `to` is either a tab name or {player:'Name'}. */
+  function tile(lab, val, trendCls, trendTxt, isText, to) {
+    var attrs = '', cls = 'tile';
+    if (to && to.player) {
+      attrs = ' data-player="' + esc(to.player) + '" role="button" tabindex="0"';
+      cls += ' tile-link';
+    } else if (to) {
+      attrs = ' data-goto="' + esc(to) + '" role="button" tabindex="0"';
+      cls += ' tile-link';
+    }
+    return '<div class="' + cls + '"' + attrs + '>' +
       '<div class="tile-lab">' + esc(lab) + '</div>' +
       '<div class="tile-val' + (isText ? ' txt' : '') + '">' + esc(val) + '</div>' +
       (trendTxt ? '<div class="tile-trend ' + (trendCls || '') + '">' + esc(trendTxt) + '</div>' : '') +
+      (to ? '<span class="tile-go" aria-hidden="true">&rsaquo;</span>' : '') +
       '</div>';
   }
 

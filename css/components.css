@@ -1310,3 +1310,49 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   text-align: center;
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   INTERACTIVE TILES
+   A number you cannot open is a dead end. Every tile that has somewhere to
+   go says so, and behaves like the button it is.
+   ========================================================================== */
+.tile-link {
+  cursor: pointer;
+  padding-right: 26px;
+}
+.tile-link:hover {
+  border-color: var(--chrome-dim);
+  background: var(--surface-2);
+}
+.tile-link:focus-visible {
+  outline: 2px solid var(--chrome);
+  outline-offset: 2px;
+}
+.tile-link:active { transform: translateY(0); }
+.tile-go {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-3);
+  transition: transform .2s var(--ease), color .2s;
+}
+.tile-link:hover .tile-go {
+  color: var(--chrome);
+  transform: translateY(-50%) translateX(3px);
+}
+
+/* Hero tags that navigate */
+.hero-tag-link {
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .18s, color .18s, background .18s;
+}
+.hero-tag-link:hover {
+  border-color: var(--chrome-dim);
+  color: var(--text);
+  background: rgba(35,44,56,.85);
+}
+.hero-tag-link:focus-visible { outline: 2px solid var(--chrome); outline-offset: 2px; }
