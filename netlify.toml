@@ -14,16 +14,20 @@
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Code and assets are safe to cache for a day.
+# Code must revalidate on every load.
+# These files are small and they change together. Caching them for a day
+# means a deploy can leave a visitor running NEW html against OLD javascript
+# until their cache expires - a mix that breaks in ways nobody can reproduce.
+# Revalidation costs one 304 per file and is always correct.
 [[headers]]
   for = "/js/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/css/*"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/assets/*"
