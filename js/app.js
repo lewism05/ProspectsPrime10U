@@ -852,9 +852,26 @@
 
   Store.init();
 
-  // Restore the tab from the URL hash
+  /* Restore the tab from the URL hash.
+
+     A coach who copies the link out of his own address bar while standing in
+     Coaches Corner hands out "...netlify.app/#manage", and every parent who
+     opens it lands in the coaches room looking at a locked card. The link is
+     shared far more often than it is deep-linked, so a coach-room tab only
+     survives for someone who actually has coach access. Everyone else starts
+     where they should, on the dashboard, and the stale hash is cleaned off
+     the address bar so it does not get passed along again. */
   var hash = (location.hash || '').replace('#', '');
-  if (TABS.indexOf(hash) >= 0) currentTab = hash;
+  if (TABS.indexOf(hash) >= 0) {
+    if (ROOM_OF[hash] === 'corner' && !Store.state.coach) {
+      currentTab = 'dashboard';
+      if (window.history && history.replaceState) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    } else {
+      currentTab = hash;
+    }
+  }
 
   /* Apply the room filter once at boot. goTab only re-applies when the room
      changes, so without this the very first render shows every tab from
