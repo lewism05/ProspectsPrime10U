@@ -373,13 +373,62 @@
   /* ==================================================================
      MODAL
      ================================================================== */
+  /* A dialog that opens without taking focus leaves a keyboard or screen
+     reader user standing behind it, tabbing through the page underneath.
+     Focus moves in on open, stays inside while it is open, and goes back to
+     whatever opened it on close. */
+  var modalOpener = null;
+
+  function modalFocusables() {
+    return [].slice.call($('modalScrim').querySelectorAll(
+      'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),' +
+      'textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+    )).filter(function (el) {
+      var r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
+    });
+  }
+
+  function focusIntoModal() {
+    var f = modalFocusables();
+    /* The close button is first in the DOM but a poor landing spot, so prefer
+       the first real control and fall back to the dialog itself. */
+    var target = f.filter(function (el) { return el.id !== 'modalClose'; })[0] || f[0];
+    if (target) target.focus();
+    else $('modalScrim').querySelector('.modal').focus();
+  }
+
   function openModal(title, bodyHtml, footHtml) {
+    modalOpener = document.activeElement;
     $('modalTitle').textContent = title;
     $('modalBody').innerHTML = bodyHtml;
     $('modalFoot').innerHTML = footHtml || '<button class="btn btn-ghost" data-close-modal>Close</button>';
     $('modalScrim').classList.add('open');
+    setTimeout(focusIntoModal, 0);
   }
-  function closeModal() { $('modalScrim').classList.remove('open'); }
+
+  function closeModal() {
+    var wasOpen = $('modalScrim').classList.contains('open');
+    $('modalScrim').classList.remove('open');
+    if (wasOpen && modalOpener && document.contains(modalOpener)) {
+      try { modalOpener.focus(); } catch (e) {}
+    }
+    modalOpener = null;
+  }
+
+  /* Keep Tab inside the dialog while it is open. */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab') return;
+    if (!$('modalScrim').classList.contains('open')) return;
+    var f = modalFocusables();
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (!$('modalScrim').contains(document.activeElement)) {
+      e.preventDefault(); first.focus(); return;
+    }
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 
   $('modalClose').addEventListener('click', closeModal);
   $('modalScrim').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
@@ -570,6 +619,14 @@
     $('modalBody').innerHTML = P10.Matchup.editorHtml(gameDraft, Store.state);
   }
 
+  /* A repaint destroys the focused node, so put focus somewhere sensible
+     instead of letting it fall back to <body> behind the dialog. */
+  function paintEditorKeepingFocus(focusSel) {
+    paintEditor();
+    var el = focusSel ? $('modalBody').querySelector(focusSel) : null;
+    if (el) el.focus();
+  }
+
   function refreshEditor() { readEditor(); paintEditor(); }
 
   function openGameEditor(game) {
@@ -600,7 +657,12 @@
 
     /* --- home / away --- */
     var side = e.target.closest('#gSide [data-side]');
-    if (side) { gameDraft.away = side.dataset.side === 'away'; refreshEditor(); return; }
+    if (side) {
+      gameDraft.away = side.dataset.side === 'away';
+      readEditor();
+      paintEditorKeepingFocus('#gSide [data-side="' + side.dataset.side + '"]');
+      return;
+    }
 
     /* --- batting order: tap to append, tap again to remove --- */
     var pick = e.target.closest('#gLineup [data-pick-name]');
@@ -609,7 +671,8 @@
       var at = gameDraft.lineup.indexOf(nm);
       if (at >= 0) gameDraft.lineup.splice(at, 1);
       else gameDraft.lineup.push(nm);
-      refreshEditor();
+      readEditor();
+      paintEditorKeepingFocus('#gLineup [data-pick-name="' + nm.replace(/"/g, '\\"') + '"]');
       return;
     }
 
@@ -617,7 +680,7 @@
     if (e.target.closest('#gAddPitcher')) {
       readEditor();
       gameDraft.pitchers.push({ name: '', ip: '', r: '', bb: '', k: '', pitches: '' });
-      paintEditor();
+      paintEditorKeepingFocus('#gPitchers .prow:last-child .pname');
       return;
     }
     var drop = e.target.closest('[data-drop-pitcher]');

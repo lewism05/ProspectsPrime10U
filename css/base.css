@@ -273,6 +273,50 @@ p:last-child { margin-bottom: 0; }
 :root[data-theme="light"] .hero::before {
   background-image: repeating-linear-gradient(115deg, rgba(16,22,32,.022) 0 1px, transparent 1px 5px);
 }
+/* ==========================================================================
+   FOCUS & TOUCH
+   An audit found twelve controls with no visible focus state at all - the
+   theme and settings buttons and every segmented control - which makes the
+   app unusable by keyboard. One ring, applied everywhere, matching the one
+   .btn already had.
+   ========================================================================== */
+.seg-btn:focus,
+.icon-btn:focus,
+.room-btn:focus,
+.navtab:focus,
+.live-pill:focus,
+.lead-row:focus,
+.pick:focus,
+.pcard:focus,
+.drawer-close:focus,
+[data-edit-game]:focus,
+[data-pick-name]:focus {
+  outline: 2px solid var(--chrome);
+  outline-offset: 2px;
+}
+/* Drop it again for pointer focus where the browser can tell the difference,
+   so a mouse click does not leave a ring behind. Written as :focus plus this
+   opt-out rather than :focus-visible alone, which several engines evaluate
+   inconsistently for script-moved focus - and this dialog moves focus. */
+.seg-btn:focus:not(:focus-visible),
+.icon-btn:focus:not(:focus-visible),
+.room-btn:focus:not(:focus-visible),
+.navtab:focus:not(:focus-visible),
+.live-pill:focus:not(:focus-visible),
+.lead-row:focus:not(:focus-visible),
+.pick:focus:not(:focus-visible),
+.pcard:focus:not(:focus-visible),
+.drawer-close:focus:not(:focus-visible),
+[data-edit-game]:focus:not(:focus-visible),
+[data-pick-name]:focus:not(:focus-visible) {
+  outline: none;
+}
+/* The masthead and the tab strip are both sticky and together occupy 154px,
+   measured while scrolled. Without this, anything scrolled to by keyboard or
+   by an anchor arrives underneath them. */
+html { scroll-padding-top: 162px; }
+@media (max-width: 720px) { html { scroll-padding-top: calc(var(--nav-h) + 16px); } }
+
 :root[data-theme="light"] .rooms { background: rgba(16,22,32,.05); }
 :root[data-theme="light"] .seg   { background: var(--surface-2); }
 

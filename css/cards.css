@@ -553,3 +553,10 @@ table.bbb-tbl tr:last-child td { border-bottom: none; }
 }
 .share-state.busy { color: var(--chrome-dim); }
 .share-state.busy::before { animation: pulseDot 1.1s ease-in-out infinite; }
+
+/* Card-scoped type sizes for touch screens. This file loads last, so the
+   coarse-pointer bump for .card-hint has to live here to win over the rule
+   that sets it above. */
+@media (pointer: coarse) {
+  .card-hint { font-size: 12.5px; }
+}
