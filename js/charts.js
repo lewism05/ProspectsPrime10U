@@ -284,6 +284,13 @@ P10.Charts = (function () {
       .sort(function (a, b) { return b.pit.ip - a.pit.ip; });
     if (!rows.length) { fallback(id, 'No pitching data in this window.'); return null; }
 
+    /* This chart is built on strike%. Without that column there is nothing
+       honest to draw, so say why instead of drawing a row of zeros. */
+    if (!rows.some(function (p) { return p.pit.strike != null && p.pit.strike > 0; })) {
+      fallback(id, 'Strike % is not in this export. Add the Advanced pitching columns and this chart fills in.');
+      return null;
+    }
+
     var bp = P10.CONFIG.bench.pitching;
 
     return make(id, {

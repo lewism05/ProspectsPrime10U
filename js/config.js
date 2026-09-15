@@ -29,6 +29,9 @@ P10.CONFIG = {
   roster: [
     { name: 'Jackson Lewis',    num: 4,  pos: '',  alt: '', pitcher: null, bats: '', throws: '' },
     { name: 'Asher Steele',     num: 13, pos: '',  alt: '', pitcher: null, bats: '', throws: '' },
+    /* Number unknown - GameChanger truncated it in the roster view. Fill it
+       in and his card picks it up; nothing else depends on it. */
+    { name: 'Cairo Merriweather', num: null, pos: '', alt: '', pitcher: null, bats: '', throws: '' },
     { name: 'Coleman Claypool', num: 6,  pos: '',  alt: '', pitcher: null, bats: '', throws: '' },
     { name: 'Hunter Bierman',   num: 2,  pos: '',  alt: '', pitcher: null, bats: '', throws: '' },
     { name: 'James Blaylock',   num: 51, pos: '',  alt: '', pitcher: null, bats: '', throws: '' },

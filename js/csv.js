@@ -354,12 +354,22 @@ P10.CSV = (function () {
       .trim();
   }
 
+  /* GameChanger ends every stats table with a Team totals row. It has a
+     name-shaped cell, so without this it becomes a player called "Team"
+     who leads the roster in everything. */
+  var TOTALS_ROWS = ['team', 'teams', 'total', 'totals', 'team totals', 'team total'];
+
+  function isTotalsName(raw) {
+    return TOTALS_ROWS.indexOf(nameKey(raw)) >= 0;
+  }
+
   /* Match a CSV name against the configured roster. Falls back to the
      raw name so unknown players still show up rather than vanishing. */
   function resolveName(raw) {
     if (!raw) return null;
     var key = nameKey(raw);
     if (!key) return null;
+    if (isTotalsName(raw)) return null;
 
     var roster = P10.CONFIG.roster;
     var i, rk;
@@ -406,6 +416,7 @@ P10.CSV = (function () {
     detectCategories: detectCategories,
     getPlayerName: getPlayerName,
     resolveName: resolveName,
+    isTotalsName: isTotalsName,
     nameKey: nameKey,
     PATTERNS: PATTERNS
   };

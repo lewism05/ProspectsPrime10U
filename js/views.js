@@ -143,9 +143,10 @@ P10.Views = (function () {
       S.gradeLabel(S.grade('batting', 'obp', t.obp)) + ' for 10U', false, 'batting');
 
     if (t.ip > 0) {
-      html += tile('Team ERA', S.fixed(t.era, 2), '',
-        Math.round(t.strikePct * 100) + '% strikes · ' + S.fixed(t.bbPerIp, 2) + ' BB/IP',
-        false, 'pitching');
+      var eraNote = (t.strikePct != null && t.strikePct > 0)
+        ? Math.round(t.strikePct * 100) + '% strikes · ' + S.fixed(t.bbPerIp, 2) + ' BB/IP'
+        : S.fixed(t.kPerIp, 2) + ' K/IP · ' + S.fixed(t.bbPerIp, 2) + ' BB/IP';
+      html += tile('Team ERA', S.fixed(t.era, 2), '', eraNote, false, 'pitching');
     } else {
       html += tile('Team AVG', S.rate(t.avg), '', t.h + ' hits in ' + t.ab + ' AB', false, 'batting');
     }
@@ -157,9 +158,14 @@ P10.Views = (function () {
     }
 
     if (arm) {
-      html += tile('Top Arm', arm.player.short, 'up',
-        Math.round(arm.strike * 100) + '% strikes · ' + S.fixed(arm.era, 2) + ' ERA',
-        true, { player: arm.player.name });
+      /* Strike% is the headline when the export carries it. Screenshot-fed
+         seasons have no strike column, so fall back to K and ERA rather
+         than printing "0% strikes". */
+      var armNote = (arm.strike != null && arm.strike > 0)
+        ? Math.round(arm.strike * 100) + '% strikes · ' + S.fixed(arm.era, 2) + ' ERA'
+        : (arm.player.pit.k + ' K in ' + S.ipText(arm.player.pit.ip) + ' IP · ' +
+           S.fixed(arm.era, 2) + ' ERA');
+      html += tile('Top Arm', arm.player.short, 'up', armNote, true, { player: arm.player.name });
     }
 
     set('statbar', html);
@@ -506,6 +512,15 @@ P10.Views = (function () {
     set('rosterGrid', players.map(function (p) { return playerCard(p, st.players); }).join(''));
   }
 
+  /* Strike% is the honest headline for an arm, but a screenshot-fed season
+     has no strike column. Fall back to K/IP rather than printing 0%. */
+  function armWhy(a, tail) {
+    var lead = (a.strike != null && a.strike > 0)
+      ? Math.round(a.strike * 100) + '% strikes'
+      : S.fixed(a.kip, 2) + ' K/IP';
+    return lead + ' · ' + tail;
+  }
+
   function playerCard(p, all) {
     var b = p.bat || {};
     var ach = I.achievements(p, all).slice(0, 2);
@@ -520,7 +535,8 @@ P10.Views = (function () {
     } else if (p.pit && p.pit.ip > 0) {
       s1 = S.ipText(p.pit.ip); l1 = 'IP';
       s2 = S.fixed(p.pit.era, 2); l2 = 'ERA';
-      s3 = Math.round(p.pit.strike * 100) + '%'; l3 = 'STR';
+      if (p.pit.strike != null && p.pit.strike > 0) { s3 = Math.round(p.pit.strike * 100) + '%'; l3 = 'STR'; }
+      else { s3 = String(p.pit.k); l3 = 'K'; }
     } else {
       s1 = '—'; l1 = 'AVG'; s2 = '—'; l2 = 'OBP'; s3 = '—'; l3 = 'OPS';
     }
@@ -742,7 +758,7 @@ P10.Views = (function () {
         return '<div class="lineup-slot" data-player="' + esc(a.player.name) + '" style="cursor:pointer">' +
           '<span class="slot-n">' + (i + 1) + '</span>' +
           '<span class="slot-main"><span class="slot-name">' + esc(a.player.name) + '</span>' +
-          '<div class="slot-why">' + Math.round(a.strike * 100) + '% strikes · ' + S.fixed(a.bbip, 2) + ' BB/IP · ' + S.ipText(a.ip) + ' IP</div></span>' +
+          '<div class="slot-why">' + armWhy(a, S.fixed(a.bbip, 2) + ' BB/IP · ' + S.ipText(a.ip) + ' IP') + '</div></span>' +
           '<span class="slot-grade grade-' + a.grade + '">' + a.grade + '</span>' +
           '</div>';
       }).join('') +
@@ -937,7 +953,7 @@ P10.Views = (function () {
         (arms.length ? arms.map(function (a, i) {
           return '<div class="lineup-slot"><span class="slot-n">' + (i + 1) + '</span>' +
             '<span class="slot-main"><span class="slot-name">' + esc(a.player.name) + '</span>' +
-            '<div class="slot-why">' + Math.round(a.strike * 100) + '% strikes · ' + S.fixed(a.era, 2) + ' ERA</div></span>' +
+            '<div class="slot-why">' + armWhy(a, S.fixed(a.era, 2) + ' ERA') + '</div></span>' +
             '<span class="slot-grade grade-' + a.grade + '">' + a.grade + '</span></div>';
         }).join('') : '<div class="hint">No pitching data loaded.</div>') +
         '</div></div>'

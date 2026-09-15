@@ -129,7 +129,11 @@ P10.Stats = (function () {
       bf: g('bf') || 0,
       pitches: pitches || 0,
       strikes: strikes || 0,
-      strike: strike === null ? 0 : strike,
+      /* Stays null when the export has no strike column. Zeroing it would
+         put every pitcher at "0% strikes", which reads as a real number and
+         is the opposite of the truth. Every consumer treats null as unknown
+         and shows a dash. */
+      strike: strike,
       bbip: bbip === null ? 0 : bbip,
       kip: kip === null ? 0 : kip
     };
@@ -513,7 +517,7 @@ P10.Stats = (function () {
     /* GameChanger exports S% but no raw strike count, so summing strikes
        gives zero even when every pitcher has a strike rate. Fall back to an
        innings-weighted mean of the per-pitcher rates. */
-    var strikePct = 0;
+    var strikePct = null;
     if (pitches && strikes) {
       strikePct = strikes / pitches;
     } else {
@@ -521,7 +525,9 @@ P10.Stats = (function () {
       pit.forEach(function (p) {
         if (p.pit.strike > 0) { wsum += p.pit.strike * p.pit.ip; wtot += p.pit.ip; }
       });
-      strikePct = wtot ? wsum / wtot : 0;
+      /* Null, not zero, when no pitcher has a strike rate - see the note on
+         P10.Stats.pitching(). Callers show a dash or a different stat. */
+      strikePct = wtot ? wsum / wtot : null;
     }
 
     var e = sum(fld, function (p) { return p.fld.e; });

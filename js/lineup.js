@@ -240,13 +240,25 @@ P10.Lineup = (function () {
       .filter(function (p) { return p.pitSeason && p.pitSeason.ip >= C.minSample.ip; })
       .map(function (p) {
         var pit = p.pitSeason;
-        var strike = scale(pit.strike, bp.strike.watch * .8, bp.strike.elite);
         var era = 1 - scale(pit.era, bp.era.elite, bp.era.watch);
         var walks = 1 - scale(pit.bbip, bp.bbip.elite, bp.bbip.watch);
         var ks = scale(pit.kip, 0, bp.kip.elite);
         var conf = Math.max(.4, Math.min(1, pit.ip / 12));
 
-        var score = ((strike * .40) + (walks * .28) + (era * .22) + (ks * .10)) * conf + (.4 * (1 - conf));
+        /* Strike%% carries the most weight because at this age it predicts
+           outcomes better than anything else. When the export has no strike
+           column its weight is redistributed across the rest instead of
+           scoring zero - otherwise every arm on the staff is marked down
+           forty points for a column the coach never had. */
+        var raw, hasStrike = (pit.strike != null && pit.strike > 0);
+        if (hasStrike) {
+          var strike = scale(pit.strike, bp.strike.watch * .8, bp.strike.elite);
+          raw = (strike * .40) + (walks * .28) + (era * .22) + (ks * .10);
+        } else {
+          raw = (walks * (.28 / .60)) + (era * (.22 / .60)) + (ks * (.10 / .60));
+        }
+
+        var score = raw * conf + (.4 * (1 - conf));
 
         return {
           player: p, score: score, grade: grade(score),
