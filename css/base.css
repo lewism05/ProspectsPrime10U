@@ -1,55 +1,70 @@
 /* ==========================================================================
    PROSPECTS PRIME 10U — BASE
    Design tokens, reset, typography, utilities.
-   Palette derived from the team mark: obsidian black, chrome silver, white.
+   Palette: indigo night, violet-to-cyan duotone, semantic grading held apart.
    ========================================================================== */
 
+/* ==========================================================================
+   NIGHT GAME
+   The old palette was obsidian and brushed chrome - a broadcast truck at
+   midnight. Handsome, and the same grey every sports product reaches for.
+   This is the other half of the ballpark: an indigo sky under the lights,
+   with a violet-to-cyan charge running through it.
+
+   The discipline that keeps it usable: the brand hues (violet, cyan) never
+   carry meaning about a number, and the semantic hues (green, amber, red)
+   are never used for decoration. A kid's stat line is graded in exactly
+   three colours, the same three as before, so nothing a parent learned to
+   read has moved.
+   ========================================================================== */
 :root {
   /* ---- Surfaces (darkest → lightest) ---- */
-  --bg:            #07090C;
-  --bg-grad:       radial-gradient(1200px 600px at 50% -10%, #16202B 0%, #07090C 62%);
-  --surface:       #0E1218;
-  --surface-2:     #141A22;
-  --surface-3:     #1B222C;
-  --surface-hi:    #232C38;
+  --bg:            #07070F;
+  --bg-grad:       radial-gradient(1100px 620px at 50% -14%, #241C4E 0%, #12112A 38%, #07070F 72%);
+  --surface:       #10111F;
+  --surface-2:     #171932;
+  --surface-3:     #1F2240;
+  --surface-hi:    #2A2E54;
 
   /* ---- Lines ---- */
-  --line:          #212934;
-  --line-soft:     #1A212A;
-  --line-strong:   #33404F;
+  --line:          #262A48;
+  --line-soft:     #1C1F38;
+  --line-strong:   #3D4370;
 
   /* ---- Text ---- */
-  --text:          #F4F7FA;
-  --text-2:        #A9B4C2;
-  --text-3:        #6B7686;
-  --text-inverse:  #07090C;
+  --text:          #F3F3FC;
+  --text-2:        #A9AED2;
+  --text-3:        #6E7398;
+  --text-inverse:  #07070F;
 
-  /* ---- Brand chrome (from the star mark) ---- */
-  --chrome:        #C9CFD6;
-  --chrome-dim:    #8B95A2;
-  --chrome-grad:   linear-gradient(160deg, #FFFFFF 0%, #D3D9E0 32%, #8D97A4 66%, #EDF1F5 100%);
-  --chrome-line:   linear-gradient(90deg, transparent, #C9CFD6 22%, #FFFFFF 50%, #C9CFD6 78%, transparent);
+  /* ---- Brand: a violet/cyan duotone, used for identity only ---- */
+  --chrome:        #9B87FF;
+  --chrome-dim:    #6C63B0;
+  --chrome-grad:   linear-gradient(120deg, #7C5CFF 0%, #9B7BFF 26%, #35C8F0 68%, #28E5D0 100%);
+  --chrome-line:   linear-gradient(90deg, transparent, #7C5CFF 20%, #35C8F0 52%, #28E5D0 78%, transparent);
+  --violet:        #7C5CFF;
+  --cyan:          #35C8F0;
 
-  /* ---- Semantic ---- */
-  --good:          #3DDC91;
-  --good-dim:      #1B6B48;
-  --good-bg:       rgba(61,220,145,.10);
+  /* ---- Semantic: grading only, never decoration ---- */
+  --good:          #34E39B;
+  --good-dim:      #17694A;
+  --good-bg:       rgba(52,227,155,.11);
   --warn:          #FFC24B;
   --warn-dim:      #6E5314;
-  --warn-bg:       rgba(255,194,75,.10);
-  --bad:           #FF6B6B;
-  --bad-dim:       #6E2020;
-  --bad-bg:        rgba(255,107,107,.10);
-  --info:          #57B6FF;
-  --info-bg:       rgba(87,182,255,.10);
+  --warn-bg:       rgba(255,194,75,.11);
+  --bad:           #FF6B84;
+  --bad-dim:       #6E2030;
+  --bad-bg:        rgba(255,107,132,.11);
+  --info:          #35C8F0;
+  --info-bg:       rgba(53,200,240,.11);
 
   /* ---- Tier colors ---- */
   --tier-1:        #FFD66B;
-  --tier-2:        #8FB6D8;
-  --tier-3:        #9A8FD8;
+  --tier-2:        #35C8F0;
+  --tier-3:        #9B87FF;
 
   /* ---- Type ---- */
-  --f-display: 'Barlow Condensed', 'Oswald', 'Arial Narrow', sans-serif;
+  --f-display: 'Bebas Neue', 'Barlow Condensed', 'Oswald', 'Arial Narrow', sans-serif;
   --f-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --f-num:     'Roboto Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
@@ -67,6 +82,20 @@
   --maxw: 1440px;
 
   --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+/* ---------- Display face, self-hosted ----------
+   Served from the repo rather than Google Fonts: one 14KB file, no third-
+   party request in the critical path, and it still renders on a phone with
+   a hostile network at a ball field. SIL Open Font License, see
+   assets/fonts/BebasNeue-OFL.txt. */
+@font-face {
+  font-family: 'Bebas Neue';
+  src: url('../assets/fonts/bebas-neue-400.woff2') format('woff2'),
+       url('../assets/fonts/bebas-neue-400.woff') format('woff');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* ---------- Reset ---------- */
@@ -103,9 +132,9 @@ button, input, select, textarea {
 button { cursor: pointer; background: none; border: none; padding: 0; }
 
 a { color: var(--chrome); text-decoration: none; }
-a:hover { color: #fff; }
+a:hover { color: var(--cyan); }
 
-::selection { background: rgba(201,207,214,.28); color: #fff; }
+::selection { background: rgba(124,92,255,.35); color: #fff; }
 
 /* ---------- Scrollbar ---------- */
 * { scrollbar-width: thin; scrollbar-color: var(--surface-hi) transparent; }
@@ -218,42 +247,46 @@ p:last-child { margin-bottom: 0; }
    ambers that glow on black fail contrast on paper.
    ========================================================================== */
 :root[data-theme="light"] {
-  --bg:            #F1F3F6;
-  --bg-grad:       radial-gradient(1200px 620px at 50% -12%, #FFFFFF 0%, #EBEEF2 60%);
+  --bg:            #F4F4FB;
+  --bg-grad:       radial-gradient(1100px 640px at 50% -14%, #FFFFFF 0%, #EDEBFA 46%, #F4F4FB 72%);
   --surface:       #FFFFFF;
-  --surface-2:     #F6F8FA;
-  --surface-3:     #ECEFF3;
-  --surface-hi:    #E1E6EC;
+  --surface-2:     #F7F6FD;
+  --surface-3:     #EFEDFA;
+  --surface-hi:    #E3E0F6;
 
-  --line:          #E3E7ED;
-  --line-soft:     #EDF0F4;
-  --line-strong:   #C7CFDA;
+  --line:          #E6E4F2;
+  --line-soft:     #EFEEF8;
+  --line-strong:   #C8C3E4;
 
-  --text:          #101620;
-  --text-2:        #48525F;
-  --text-3:        #737E8C;
+  --text:          #14132B;
+  --text-2:        #4C4A6B;
+  --text-3:        #74719A;
   --text-inverse:  #FFFFFF;
 
-  --chrome:        #2B3542;
-  --chrome-dim:    #64707F;
-  --chrome-grad:   linear-gradient(160deg, #48545F 0%, #26313D 34%, #10161E 70%, #3B4753 100%);
-  --chrome-line:   linear-gradient(90deg, transparent, #9AA5B2 22%, #4A5563 50%, #9AA5B2 78%, transparent);
+  /* The duotone darkens for paper - #7C5CFF on white is a 3.1:1 accent, fine
+     for a rule, not for a word. */
+  --chrome:        #5334D6;
+  --chrome-dim:    #7D6BC2;
+  --chrome-grad:   linear-gradient(120deg, #5334D6 0%, #6F4BE8 28%, #1091C4 70%, #0E9E96 100%);
+  --chrome-line:   linear-gradient(90deg, transparent, #7C5CFF 20%, #1091C4 52%, #0E9E96 78%, transparent);
+  --violet:        #5334D6;
+  --cyan:          #1091C4;
 
-  --good:          #1B7A47;
-  --good-dim:      #A9DCC0;
-  --good-bg:       rgba(27,122,71,.09);
+  --good:          #0F7A4B;
+  --good-dim:      #A6DCC2;
+  --good-bg:       rgba(15,122,75,.09);
   --warn:          #8A5A05;
   --warn-dim:      #F0D49A;
   --warn-bg:       rgba(138,90,5,.10);
-  --bad:           #B02525;
-  --bad-dim:       #F2B9B9;
-  --bad-bg:        rgba(176,37,37,.08);
-  --info:          #1667A8;
-  --info-bg:       rgba(22,103,168,.09);
+  --bad:           #B81D45;
+  --bad-dim:       #F4B6C6;
+  --bad-bg:        rgba(184,29,69,.08);
+  --info:          #1091C4;
+  --info-bg:       rgba(16,145,196,.10);
 
   --tier-1:        #8A6100;
-  --tier-2:        #2E5C86;
-  --tier-3:        #4B3E8A;
+  --tier-2:        #0F7590;
+  --tier-3:        #5334D6;
 
   --sh-1: 0 1px 2px rgba(16,22,32,.06);
   --sh-2: 0 2px 10px rgba(16,22,32,.09);

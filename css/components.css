@@ -1790,3 +1790,48 @@ table.stat tbody tr { transition: background .14s; }
     0 1px 1px rgba(16,22,32,.04),
     0 8px 24px -16px rgba(16,22,32,.26);
 }
+
+/* ==========================================================================
+   NIGHT GAME — surfaces that were hard-coded grey
+   ========================================================================== */
+
+/* The hero band carried its own slate gradient from the old palette, so it
+   sat across the indigo like a strip of a different website. */
+.hero {
+  background:
+    linear-gradient(180deg, rgba(58,42,138,.55) 0%, rgba(20,18,46,.30) 46%, rgba(7,7,15,0) 100%);
+  border-bottom: 1px solid var(--line);
+}
+.hero::before {
+  background-image:
+    repeating-linear-gradient(115deg, rgba(155,135,255,.05) 0 1px, transparent 1px 6px);
+}
+/* A lit edge along the bottom of the hero, in the brand duotone. */
+.hero::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--chrome-line);
+  opacity: .55;
+  pointer-events: none;
+}
+:root[data-theme="light"] .hero {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F3F1FD 48%, rgba(244,244,251,0) 100%);
+}
+:root[data-theme="light"] .hero::before {
+  background-image: repeating-linear-gradient(115deg, rgba(83,52,214,.05) 0 1px, transparent 1px 6px);
+}
+
+/* Bebas Neue is narrower than the face this scale was drawn for and has no
+   lowercase to carry small sizes, so the micro-labels need a touch more
+   size and a touch less tracking to stay legible. */
+.tile-lab,
+.eyebrow,
+.hrec-lab,
+.aw-cat,
+.pcard-stat .l { font-size: 11.5px; letter-spacing: .13em; }
+.card-title { font-size: 16px; letter-spacing: .10em; }
+.navtab { font-size: 15px; letter-spacing: .08em; }
+.seg-btn { font-size: 13.5px; letter-spacing: .07em; }
+.room-btn { letter-spacing: .08em; }
+.tile-val { font-size: 34px; letter-spacing: -.01em; }
+.hrec-val { font-size: 38px; }
