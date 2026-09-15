@@ -103,7 +103,26 @@ P10.Store = (function () {
         if (!hasLocal || incoming > localTs) {
           state.data = json.data;
           state.meta = json.meta || { updatedAt: new Date().toISOString(), source: 'published' };
-          if (Array.isArray(json.games)) { state.games = json.games; ls(KEY_GAMES, state.games); }
+
+          /* Games are coach-entered and only ever published in a batch, so a
+             coach who logs a game and reloads before publishing would other-
+             wise watch it disappear. Published entries win where ids match;
+             anything logged on this device since the last publish is kept.
+             A parent device has nothing of its own to protect, so it mirrors
+             what was published. */
+          if (Array.isArray(json.games)) {
+            if (state.coach && state.games && state.games.length) {
+              var pubIds = {};
+              json.games.forEach(function (g) { pubIds[g.id] = true; });
+              var localOnly = state.games.filter(function (g) { return !pubIds[g.id]; });
+              state.games = json.games.concat(localOnly).sort(function (a, b) {
+                return String(b.date).localeCompare(String(a.date));
+              });
+            } else {
+              state.games = json.games;
+            }
+            ls(KEY_GAMES, state.games);
+          }
           persist();
           return true;
         }
@@ -244,6 +263,10 @@ P10.Store = (function () {
   }
 
   function publishBundle() {
+    /* The published meta carries a fresh updatedAt, and the local copy is
+       moved to match in publish(). Leaving them out of step made the server
+       permanently "newer" than the device that produced it, so every reload
+       took the overwrite path and threw away anything logged since. */
     return {
       app: 'prospects-10u',
       version: 1,
@@ -261,14 +284,17 @@ P10.Store = (function () {
     var code = '';
     try { code = localStorage.getItem(P10.CONFIG.ns + '_teamcode') || ''; } catch (e) {}
 
+    var bundle = publishBundle();
+
     return fetch('/.netlify/functions/publish-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bundle: publishBundle(), code: code, note: opts.note || '' })
+      body: JSON.stringify({ bundle: bundle, code: code, note: opts.note || '' })
     }).then(function (r) {
       return r.json().then(function (j) {
         if (!r.ok) throw new Error(j.detail ? j.error + ' ' + j.detail : (j.error || 'Publish failed'));
         state.meta.publishedAt = new Date().toISOString();
+        state.meta.updatedAt = bundle.meta.updatedAt;
         persist();
         emit('published-out');
         return j;

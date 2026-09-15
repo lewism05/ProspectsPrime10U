@@ -42,6 +42,8 @@
 .btn-ghost:hover { color: var(--text); background: var(--surface-2); }
 
 .btn-danger { border-color: rgba(255,107,107,.4); color: var(--bad); background: var(--bad-bg); }
+/* A required field the coach left blank, flagged on save rather than nagged. */
+.input-bad { border-color: var(--bad) !important; }
 .btn-danger:hover { background: rgba(255,107,107,.18); border-color: var(--bad); }
 
 .btn-sm { height: 28px; padding: 0 10px; font-size: 11.5px; }

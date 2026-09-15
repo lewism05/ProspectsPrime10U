@@ -516,6 +516,149 @@
     $('modalBody').dataset.swapSlot = slotIdx;
   }
 
+  /* ==================================================================
+     GAME LOG EDITOR
+
+     P10.Matchup.editorHtml() has always existed; nothing ever opened it, so
+     "Log A Game" was a button that did nothing and the game log stayed empty
+     no matter how many games a coach entered. This is the wiring.
+
+     The draft is held in memory and the whole form is re-rendered from it
+     after every structural change (a lineup tap, a pitcher row added), with
+     the text inputs read back into the draft first so nothing typed is lost.
+     One code path, no partial DOM patching.
+     ================================================================== */
+  var gameDraft = null;
+
+  function readEditor() {
+    if (!gameDraft) return;
+    var v = function (id) { var el = $(id); return el ? el.value : ''; };
+    var numOrNull = function (x) { return x === '' || x === null ? null : Number(x); };
+
+    gameDraft.date = v('gDate') || gameDraft.date;
+    gameDraft.opponent = v('gOpp').trim();
+    gameDraft.us = numOrNull(v('gUs'));
+    gameDraft.them = numOrNull(v('gThem'));
+    gameDraft.notes = v('gNotes');
+
+    var rows = document.querySelectorAll('#gPitchers .prow');
+    var pitchers = [];
+    rows.forEach(function (row) {
+      var g = function (cls) { var el = row.querySelector('.' + cls); return el ? el.value : ''; };
+      var name = g('pname');
+      // A row with no pitcher chosen is an empty row, not a pitcher.
+      if (!name) return;
+      pitchers.push({
+        name: name,
+        ip: g('pip') === '' ? null : Number(g('pip')),
+        r: g('pr') === '' ? null : Number(g('pr')),
+        bb: g('pbb') === '' ? null : Number(g('pbb')),
+        k: g('pk') === '' ? null : Number(g('pk')),
+        pitches: g('ppit') === '' ? null : Number(g('ppit'))
+      });
+    });
+    gameDraft.pitchers = pitchers;
+  }
+
+  function editorFoot(isNew) {
+    return (isNew ? '' : '<button class="btn btn-danger" id="gDelete">Delete</button>') +
+      '<button class="btn btn-ghost" data-close-modal>Cancel</button>' +
+      '<button class="btn btn-primary" id="gSave">Save Game</button>';
+  }
+
+  function paintEditor() {
+    $('modalBody').innerHTML = P10.Matchup.editorHtml(gameDraft, Store.state);
+  }
+
+  function refreshEditor() { readEditor(); paintEditor(); }
+
+  function openGameEditor(game) {
+    gameDraft = JSON.parse(JSON.stringify(game));
+    if (!Array.isArray(gameDraft.lineup)) gameDraft.lineup = [];
+    if (!Array.isArray(gameDraft.pitchers)) gameDraft.pitchers = [];
+    var isNew = !P10.GameLog.byId(gameDraft.id);
+    openModal(isNew ? 'Log A Game' : 'Edit Game', '', editorFoot(isNew));
+    paintEditor();
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!Store.state.coach) return;
+
+    if (e.target.closest('#addGame')) {
+      openGameEditor(P10.GameLog.blank());
+      return;
+    }
+
+    var edit = e.target.closest('[data-edit-game]');
+    if (edit) {
+      var g = P10.GameLog.byId(edit.dataset.editGame);
+      if (g) openGameEditor(g);
+      return;
+    }
+
+    if (!gameDraft || !$('modalScrim').classList.contains('open')) return;
+
+    /* --- home / away --- */
+    var side = e.target.closest('#gSide [data-side]');
+    if (side) { gameDraft.away = side.dataset.side === 'away'; refreshEditor(); return; }
+
+    /* --- batting order: tap to append, tap again to remove --- */
+    var pick = e.target.closest('#gLineup [data-pick-name]');
+    if (pick) {
+      var nm = pick.dataset.pickName;
+      var at = gameDraft.lineup.indexOf(nm);
+      if (at >= 0) gameDraft.lineup.splice(at, 1);
+      else gameDraft.lineup.push(nm);
+      refreshEditor();
+      return;
+    }
+
+    /* --- pitcher rows --- */
+    if (e.target.closest('#gAddPitcher')) {
+      readEditor();
+      gameDraft.pitchers.push({ name: '', ip: '', r: '', bb: '', k: '', pitches: '' });
+      paintEditor();
+      return;
+    }
+    var drop = e.target.closest('[data-drop-pitcher]');
+    if (drop) {
+      readEditor();
+      gameDraft.pitchers.splice(parseInt(drop.dataset.dropPitcher, 10), 1);
+      paintEditor();
+      return;
+    }
+
+    /* --- save --- */
+    if (e.target.closest('#gSave')) {
+      readEditor();
+      if (!gameDraft.opponent) {
+        var opp = $('gOpp');
+        if (opp) { opp.focus(); opp.classList.add('input-bad'); }
+        return;
+      }
+      P10.GameLog.upsert(gameDraft);
+      gameDraft = null;
+      closeModal();
+      renderAll();
+      return;
+    }
+
+    /* --- delete, two taps so a stray click cannot wipe a game --- */
+    var del = e.target.closest('#gDelete');
+    if (del) {
+      if (del.dataset.armed !== '1') {
+        del.dataset.armed = '1';
+        del.textContent = 'Tap again to delete';
+        return;
+      }
+      P10.GameLog.remove(gameDraft.id);
+      gameDraft = null;
+      closeModal();
+      renderAll();
+      return;
+    }
+  });
+
   document.addEventListener('click', function (e) {
     var pick = e.target.closest('[data-pick-player]');
     if (!pick) return;
