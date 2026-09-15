@@ -1654,3 +1654,139 @@ table.mu-tbl tr:last-child td { border-bottom: none; }
   .hint, .card-hint, .slot-why, .dropzone-h, .card-note { font-size: 12.5px; }
   .pcard-role { font-size: 11.5px; }
 }
+
+/* ==========================================================================
+   MATERIAL PASS
+   The app was drawn flat: every surface one fill, one hairline border, no
+   sense of being lit. Broadcast graphics - which is what this is imitating -
+   read as glass and brushed metal because they are lit from above. That is
+   almost entirely two details: a gradient down the face, and a one-pixel
+   highlight along the top edge. Applied here to the containers only, so no
+   markup changes and no effect on the data inside them.
+   ========================================================================== */
+.card,
+.tile {
+  background-image: linear-gradient(180deg, rgba(255,255,255,.028) 0%, rgba(255,255,255,0) 42%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 1px 2px rgba(0,0,0,.28),
+    0 10px 28px -18px rgba(0,0,0,.65);
+}
+
+/* Cards sit ON the page rather than being drawn into it, so the edge nearest
+   the light is brighter than the rest of the border. */
+.card { border-color: var(--line); }
+.card:hover { border-color: var(--line); }
+
+/* The number is the point of a stat tile. It was competing with its own
+   label for attention, so the label steps back and the value steps up. */
+.tile-val { font-size: 31px; letter-spacing: -.022em; }
+.tile-lab { opacity: .82; }
+.tile {
+  padding: 15px 16px 14px;
+  transition: border-color .2s, transform .2s var(--ease), box-shadow .2s var(--ease);
+}
+.tile:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.085),
+    0 2px 4px rgba(0,0,0,.3),
+    0 18px 38px -20px rgba(0,0,0,.8);
+}
+
+/* Section headings carried the same weight as card titles, so the page read
+   as one long list of equals. */
+.section-head h2 { font-size: clamp(23px, 2.8vw, 31px); letter-spacing: .012em; }
+.section-head h2::before { width: 4px; height: 23px; }
+
+/* A touch more air between blocks, without loosening the data inside them. */
+.grid { gap: 18px; }
+.statbar { gap: 14px; }
+
+/* Table rows were separated by a full-strength line each, which stacked into
+   a ladder. One soft rule and a hover does the same job more quietly. */
+table.stat tbody td { border-bottom-color: var(--line-soft); }
+table.stat tbody tr { transition: background .14s; }
+
+/* ---------- Light theme: paper does not get an inner highlight ---------- */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .tile {
+  background-image: linear-gradient(180deg, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 60%);
+  border-color: #E7EBF0;
+  box-shadow:
+    0 1px 1px rgba(16,22,32,.04),
+    0 8px 24px -16px rgba(16,22,32,.28);
+}
+:root[data-theme="light"] .tile:hover {
+  box-shadow:
+    0 2px 4px rgba(16,22,32,.07),
+    0 16px 34px -18px rgba(16,22,32,.4);
+}
+
+/* ==========================================================================
+   SELECTED STATE
+   The active segment and the open room were painted with the full brushed-
+   silver gradient. That chrome is the brand's, and spending it on a toggle
+   both dates the interface and spends the one loud material the design has
+   on its least important element. Selection becomes a raised chip; chrome
+   goes back to being reserved for the marks and the accent rules.
+   ========================================================================== */
+.seg-btn.active,
+.room-btn.active {
+  background: var(--surface-hi);
+  background-image: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0));
+  color: var(--text);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35);
+}
+.room-btn.active .lock { border-color: var(--line-strong); color: var(--text-2); }
+
+:root[data-theme="light"] .seg-btn.active,
+:root[data-theme="light"] .room-btn.active {
+  background: var(--chrome);
+  background-image: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0));
+  color: #FFFFFF;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 1px 2px rgba(16,22,32,.22);
+}
+:root[data-theme="light"] .room-btn.active .lock {
+  border-color: rgba(255,255,255,.4); color: rgba(255,255,255,.85);
+}
+
+/* The award cells sit inside a card, so they get the same lit treatment one
+   step quieter - otherwise the row of them reads as five flat rectangles
+   pasted onto a lit surface. */
+.awardcell {
+  background-image: linear-gradient(180deg, rgba(255,255,255,.022), rgba(255,255,255,0) 55%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.awardcell.is-mvp {
+  background-image: linear-gradient(180deg, rgba(255,214,107,.07), rgba(255,255,255,0) 60%);
+  box-shadow: inset 0 1px 0 rgba(255,214,107,.16);
+}
+:root[data-theme="light"] .awardcell {
+  background-image: none;
+  box-shadow: 0 1px 1px rgba(16,22,32,.04);
+}
+:root[data-theme="light"] .awardcell.is-mvp {
+  background-image: linear-gradient(180deg, rgba(138,97,0,.06), rgba(255,255,255,0) 60%);
+}
+
+/* Player cards carry their own diagonal gradient, so they only need the top
+   highlight and the lift to sit in the same material system as everything
+   else on the page. */
+.pcard {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 1px 2px rgba(0,0,0,.28),
+    0 10px 28px -18px rgba(0,0,0,.6);
+}
+:root[data-theme="light"] .pcard {
+  box-shadow:
+    0 1px 1px rgba(16,22,32,.04),
+    0 8px 24px -16px rgba(16,22,32,.26);
+}
