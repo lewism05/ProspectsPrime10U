@@ -113,9 +113,22 @@ P10.Store = (function () {
   }
 
   /* ---------------- Ingest parsed CSV files ---------------- */
-  function ingest(files) {
+  function ingest(files, opts) {
     // files: [{ name, text, category, window }]
+    opts = opts || {};
     var added = 0;
+
+    /* A real upload lands on top of whatever is loaded, window by window.
+       Sample data occupies season, last 8 AND last 4, so uploading a single
+       season export used to leave the sample sitting in the other two - and
+       Development Score, Hottest Bat and the "last 4" trend all read from
+       there. Real numbers against a fake baseline is worse than no baseline,
+       so the sample is cleared out before the first real file goes in. */
+    if (!opts.isSample && isSample()) {
+      state.data = { batting: {}, pitching: {}, fielding: {}, catching: {} };
+      delete state.meta.sample;
+    }
+
     files.forEach(function (f) {
       var parsed = P10.CSV.toObjects(f.text);
       if (!parsed || !parsed.data.length) return;
@@ -166,7 +179,7 @@ P10.Store = (function () {
     })).then(function (results) {
       var good = results.filter(Boolean);
       if (!good.length) throw new Error('Sample files could not be loaded.');
-      var added = ingest(good);
+      var added = ingest(good, { isSample: true });
       state.meta.sample = true;
       state.meta.source = 'sample';
       persist();

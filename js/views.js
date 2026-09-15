@@ -194,7 +194,7 @@ P10.Views = (function () {
   /* ==================================================================
      DASHBOARD
      ================================================================== */
-  var leaderMetric = 'ops';
+  var leaderMetric = 'avg';
   function setLeaderMetric(v) { leaderMetric = v; }
 
   function renderDashboard(st) {
@@ -385,20 +385,56 @@ P10.Views = (function () {
      same four names.
      ================================================================== */
   function leaderboardCard(players, st) {
+    /* `has` decides who belongs on the board at all, separately from the
+       value being ranked. A kid who went 0-for-the-weekend still has a
+       batting line and still belongs - a parent opens this looking for
+       their own child, and a zero is not a reason to disappear. Arms is
+       different: it is a pitching board, so only pitchers are on it. */
     var metrics = {
-      ops: { label: 'OPS', get: function (p) { return p.bat && p.bat.ops; }, fmt: S.rate },
-      obp: { label: 'On Base', get: function (p) { return p.bat && p.bat.obp; }, fmt: S.rate },
+      avg: { label: 'Average', get: function (p) { return p.bat && p.bat.avg; }, fmt: S.rate,
+             has: function (p) { return p.bat && p.bat.pa > 0; } },
+      ops: { label: 'OPS', get: function (p) { return p.bat && p.bat.ops; }, fmt: S.rate,
+             has: function (p) { return p.bat && p.bat.pa > 0; } },
+      obp: { label: 'On Base', get: function (p) { return p.bat && p.bat.obp; }, fmt: S.rate,
+             has: function (p) { return p.bat && p.bat.pa > 0; } },
       qab: { label: 'QAB%', get: function (p) { return p.bat && p.bat.qab; },
-             fmt: function (v) { return Math.round(v * 100) + '%'; } },
+             fmt: function (v) { return Math.round(v * 100) + '%'; },
+             has: function (p) { return p.bat && p.bat.qab != null; } },
       arm: { label: 'Arms', get: function (p) { return p.pit && p.pit.ip >= C.minSample.ip ? p.pit.strike : null; },
-             fmt: function (v) { return Math.round(v * 100) + '%'; } }
+             fmt: function (v) { return Math.round(v * 100) + '%'; },
+             has: function (p) { return p.pit && p.pit.ip >= C.minSample.ip && p.pit.strike != null; },
+             empty: 'No arm has ' + S.ipText(C.minSample.ip) + ' innings yet.' }
     };
-    var m = metrics[leaderMetric] || metrics.ops;
 
-    var rows = players.map(function (p) { return { p: p, v: m.get(p) }; })
-      .filter(function (x) { return x.v !== null && x.v !== undefined && x.v > 0; })
-      .sort(function (a, b) { return b.v - a.v; })
-      .slice(0, 8);
+    /* Strike%% is the right way to rank arms, but an export without that
+       column would leave this tab permanently blank while real pitching
+       data sits right there. Rank on K/IP instead and say so. */
+    var anyStrike = players.some(function (p) {
+      return p.pit && p.pit.ip >= C.minSample.ip && p.pit.strike != null && p.pit.strike > 0;
+    });
+    if (!anyStrike) {
+      metrics.arm = {
+        label: 'Arms',
+        get: function (p) { return p.pit && p.pit.ip >= C.minSample.ip ? p.pit.kip : null; },
+        fmt: function (v) { return S.fixed(v, 2) + ' K/IP'; },
+        has: function (p) { return p.pit && p.pit.ip >= C.minSample.ip; },
+        empty: 'No arm has ' + S.ipText(C.minSample.ip) + ' innings yet.'
+      };
+    }
+
+    metrics.qab.empty = 'QAB% is not in this export. Add the Advanced batting columns and this fills in.';
+    metrics.ops.empty = 'No batting data loaded yet.';
+    metrics.obp.empty = metrics.ops.empty;
+    metrics.avg.empty = metrics.ops.empty;
+
+    var m = metrics[leaderMetric] || metrics.avg;
+
+    /* The whole roster, not a top eight. On a ten-kid team a cut list just
+       means some family scrolls looking for a name that was never there. */
+    var rows = players.filter(m.has)
+      .map(function (p) { return { p: p, v: m.get(p) }; })
+      .filter(function (x) { return x.v !== null && x.v !== undefined; })
+      .sort(function (a, b) { return b.v - a.v; });
 
     return '<div class="card">' +
       '<div class="card-head"><div class="card-title">Leaders</div>' +
@@ -421,7 +457,7 @@ P10.Views = (function () {
               (leaderMetric === 'ops' ? '<span class="lead-delta">' + deltaText(r.p.heat) + '</span>' : '') +
               '</div>';
           }).join('') + '</div>'
-        : '<div class="hint">No data for this one yet.</div>') +
+        : '<div class="hint">' + esc(m.empty || 'No data for this one yet.') + '</div>') +
       '</div></div>';
   }
 

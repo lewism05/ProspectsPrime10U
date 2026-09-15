@@ -90,9 +90,17 @@ P10.Progress = (function () {
 
       if (!used || r.d.sample < C.minSample.pa) {
         r.score = null;
-        r.reason = r.d.sample < C.minSample.pa
-          ? 'Needs ' + C.minSample.pa + ' plate appearances in the recent window'
-          : 'Not enough windows loaded to compare';
+        /* Three different reasons land here and they are not the same thing.
+           No recent window at all is a coach action (upload a Last 4); too
+           few plate appearances in one is just time. Saying "needs 8 plate
+           appearances" when no window exists sends a parent looking for a
+           problem that is not there. */
+        var hasRecent = !!(r.player.batL4 || r.player.batL8);
+        r.reason = !hasRecent
+          ? 'Needs a Last 4 or Last 8 export alongside the season file'
+          : (r.d.sample < C.minSample.pa
+              ? 'Needs ' + C.minSample.pa + ' plate appearances in the recent window'
+              : 'Not enough windows loaded to compare');
         return;
       }
 

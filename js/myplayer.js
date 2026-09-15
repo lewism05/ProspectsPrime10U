@@ -173,7 +173,12 @@ P10.MyPlayer = (function () {
         S.grade('batting', 'obp', b.obp)));
       blocks.push(statBlock(MEANING.avg[0], S.rate(b.avg), MEANING.avg[1],
         S.grade('batting', 'avg', b.avg)));
-      if (b.kRate) blocks.push(statBlock(MEANING.kRate[0], Math.round(b.kRate * 100) + '%',
+      blocks.push(statBlock(MEANING.ops[0], S.rate(b.ops), MEANING.ops[1],
+        S.grade('batting', 'ops', b.ops)));
+      /* Shown even at zero. A kid who did not strike out all weekend should
+         see that, and hiding it makes his page look emptier than his weekend
+         was. */
+      if (b.pa > 0) blocks.push(statBlock(MEANING.kRate[0], Math.round(b.kRate * 100) + '%',
         MEANING.kRate[1], S.grade('batting', 'kRate', b.kRate)));
     }
     if (p.pit && p.pit.ip > 0) {

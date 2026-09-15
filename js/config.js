@@ -47,11 +47,15 @@ P10.CONFIG = {
      Leave empty [] and the Schedule tab shows an "add games" state.
      ------------------------------------------------------------------ */
   schedule: [
-    // Replace with your real 2026 games. Delete these and the Schedule tab
-    // shows an "add games" state instead.
-    { id: 1, date: '2026-09-06', away: false, opponent: 'AR Bombers 10U',      location: 'Memorial Park',  time: '10:00 AM' },
-    { id: 2, date: '2026-09-06', away: true,  opponent: 'Diamond Dawgs NWA 10U', location: 'Memorial Park', time: '1:30 PM' },
-    { id: 3, date: '2026-09-13', away: false, opponent: 'Springdale Baseball Club 10U', location: 'Kessler Mountain', time: '11:00 AM' }
+    /* Real games only. The three demo games that used to sit here had gone
+       past today's date, so the app was telling families the season was over
+       and listing three games that never happened. An empty schedule is
+       honest; a fake one is not.
+
+       Add games in this shape:
+       { id: 1, date: '2026-09-27', away: false, opponent: 'AR Bombers 10U',
+         location: 'Memorial Park', time: '10:00 AM' },
+       away: true means we are the visiting team. */
   ],
 
   /* ------------------------------------------------------------------

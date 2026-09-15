@@ -244,7 +244,11 @@ P10.Cards = (function () {
             '<span class="bbf-roundel"><img src="assets/mark.png" alt=""></span>' +
             '<span class="bbf-nameblock">' +
               (nm.first ? '<div class="bbf-first">' + esc(nm.first) + '</div>' : '') +
-              '<div class="bbf-last">' + esc(nm.last) + '</div>' +
+              /* A real card never truncates a kid's name. Step the type
+                 down by length instead of ellipsing it. */
+              '<div class="bbf-last' +
+                (nm.last.length >= 13 ? ' xlong' : nm.last.length >= 10 ? ' long' : '') +
+                '">' + esc(nm.last) + '</div>' +
             '</span>' +
             (pos ? '<span class="bbf-posbug">' + esc(pos) + '</span>' : '') +
           '</div>' +

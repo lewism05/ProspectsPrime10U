@@ -323,6 +323,9 @@
   text-shadow: 0 2px 5px rgba(0,0,0,.9);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* Long surnames step down rather than getting cut off. */
+.bbf-last.long  { font-size: 23px; letter-spacing: 0; }
+.bbf-last.xlong { font-size: 19px; letter-spacing: -.005em; }
 .bbf-posbug {
   width: 25px; height: 25px;
   flex-shrink: 0;
@@ -510,6 +513,8 @@ table.bbb-tbl tr:last-child td { border-bottom: none; }
 @media (max-width: 420px) {
   .card-shell { width: min(302px, 90vw); }
   .bbf-last { font-size: 27px; }
+  .bbf-last.long  { font-size: 21px; }
+  .bbf-last.xlong { font-size: 17.5px; }
   .bbf-wordmark { font-size: 17px; }
 }
 
