@@ -1,0 +1,531 @@
+/* ==========================================================================
+   PROSPECTS PRIME — HOLOGRAPHIC CHROME
+   ==========================================================================
+   A theme layer, not a rewrite. It loads last and re-skins the existing
+   components by redefining the design tokens and restyling the containers.
+   No markup changes, no JavaScript changes, nothing about a number moves.
+   Remove the one <link> in index.html and the site is exactly as it was.
+
+   Scope: dark mode only. The light theme is paper and stays paper; chrome
+   on white is a smudge. Every rule here is gated on the theme attribute.
+
+   The look, in one line: deep black, liquid chrome at the edges, glass
+   panels, a cyan-to-violet charge on anything selected, and metallic
+   silver type for the brand. The semantic colours (good / warn / bad)
+   keep their jobs - they grade a kid's numbers and nothing else.
+   ========================================================================== */
+
+/* ---------- Tokens ---------------------------------------------------- */
+:root:not([data-theme="light"]) {
+  --bg:            #020309;
+  --bg-grad:       none;
+  --surface:       rgba(8, 14, 28, .86);
+  --surface-2:     rgba(14, 22, 42, .78);
+  --surface-3:     rgba(20, 30, 54, .82);
+  --surface-hi:    rgba(30, 44, 76, .90);
+
+  --line:          rgba(150, 190, 255, .22);
+  --line-soft:     rgba(150, 190, 255, .10);
+  --line-strong:   rgba(170, 210, 255, .48);
+
+  --text:          #FFFFFF;
+  --text-2:        #BAC5D8;
+  --text-3:        #7F8BA3;
+  --text-inverse:  #06070E;
+
+  /* brand chrome: metallic silver for identity, neon for charge */
+  --chrome:        #D9E4F5;
+  --chrome-dim:    #8FA0BC;
+  --chrome-grad:   linear-gradient(110deg, #00D8FF 0%, #247BFF 42%, #A754FF 78%, #F04BE9 100%);
+  --chrome-line:   linear-gradient(90deg, transparent, #00D8FF 18%, #A754FF 52%, #F04BE9 80%, transparent);
+  --violet:        #A754FF;
+  --cyan:          #00E5FF;
+  --neon-blue:     #247BFF;
+  --neon-pink:     #F04BE9;
+  --gold:          #FFBF60;
+
+  /* grading: unchanged roles, tuned to sit on true black */
+  --good:          #00E6A0;
+  --good-dim:      #0C6B4C;
+  --good-bg:       rgba(0, 230, 160, .12);
+  --warn:          #FFC24B;
+  --warn-dim:      #6E5314;
+  --warn-bg:       rgba(255, 194, 75, .12);
+  --bad:           #FF4B73;
+  --bad-dim:       #6E1E30;
+  --bad-bg:        rgba(255, 75, 115, .12);
+  --info:          #00D8FF;
+  --info-bg:       rgba(0, 216, 255, .12);
+
+  --tier-1:        #FFBF60;
+  --tier-2:        #00E5FF;
+  --tier-3:        #A754FF;
+
+  --r:     14px;
+  --r-lg:  18px;
+
+  --glass-blur: 16px;
+  --glow-cyan:   0 0 14px rgba(0, 229, 255, .35);
+  --glow-violet: 0 0 14px rgba(167, 84, 255, .35);
+}
+
+/* ---------- Background: black plate, chrome at the edges -------------- */
+:root:not([data-theme="light"]) body {
+  background: var(--bg);
+}
+/* The chrome lives in two strips, one anchored to each edge, so it stays at
+   the edge of every screen instead of being cropped away by a single cover
+   image on a tall viewport. Each strip is a ~30KB transparent WebP over the
+   black body. A fixed pseudo-layer is used because iOS does not honour
+   background-attachment: fixed. */
+:root:not([data-theme="light"]) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: #020309;
+  background-image: url('../assets/chrome-left.png'), url('../assets/chrome-right.png');
+  background-repeat: no-repeat, no-repeat;
+  background-position: left top, right top;
+  background-size: auto 100%, auto 100%;
+  pointer-events: none;
+  opacity: .78;
+}
+@supports (background-image: url('x.webp')) {
+  :root:not([data-theme="light"]) body::before {
+    background-image: url('../assets/chrome-left.webp'), url('../assets/chrome-right.webp');
+  }
+}
+/* On a phone the strips would meet in the middle. Pull them outward and let
+   them fade, so there is still a clean black lane behind the content. */
+@media (max-width: 720px) {
+  :root:not([data-theme="light"]) body::before {
+    background-position: -28vw top, calc(100% + 28vw) top;
+    opacity: .85;
+  }
+}
+
+/* ---------- Glass panel: the one surface everything is built from ----- */
+:root:not([data-theme="light"]) .card,
+:root:not([data-theme="light"]) .tile,
+:root:not([data-theme="light"]) .pcard,
+:root:not([data-theme="light"]) .modal,
+:root:not([data-theme="light"]) .drawer {
+  background: linear-gradient(145deg, rgba(8, 16, 30, .92), rgba(2, 5, 14, .90));
+  background-image: linear-gradient(145deg, rgba(8, 16, 30, .92), rgba(2, 5, 14, .90));
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, .45),
+    0 0 10px rgba(0, 160, 255, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .14);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+}
+:root:not([data-theme="light"]) .card:hover { border-color: var(--line); }
+
+/* The card head was a slightly lighter band; on glass it is a seam of light. */
+:root:not([data-theme="light"]) .card-head {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .035), transparent);
+  border-bottom: 1px solid var(--line-soft);
+}
+:root:not([data-theme="light"]) .card-title { color: #FFFFFF; }
+:root:not([data-theme="light"]) .card-note  { color: var(--cyan); }
+:root:not([data-theme="light"]) .card-accent::before { background: var(--chrome-grad); opacity: 1; height: 2px; }
+
+/* ---------- Masthead ---------------------------------------------------- */
+:root:not([data-theme="light"]) .topnav {
+  background: rgba(2, 3, 9, .86);
+  border-bottom: 1px solid rgba(150, 190, 255, .14);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+:root:not([data-theme="light"]) .topnav::after { background: var(--chrome-line); opacity: .7; }
+
+/* The wordmark: polished metal, italic, with a cool glow. This is the
+   single loudest thing on the page and the only place the metal is bright. */
+:root:not([data-theme="light"]) .brand-name {
+  font-size: 23px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: .035em;
+  background: linear-gradient(180deg,
+    #FFFFFF 0%, #D9E8FF 28%, #FFFFFF 43%, #8FA9D8 58%, #D8AAFF 78%, #FFFFFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 8px rgba(100, 180, 255, .28));
+}
+:root:not([data-theme="light"]) .brand-sub {
+  color: #BAC5D8;
+  letter-spacing: .26em;
+}
+:root:not([data-theme="light"]) .brand-mark {
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, .35)) drop-shadow(0 2px 6px rgba(0, 0, 0, .7));
+}
+
+/* Masthead controls read as one floating glass group. */
+:root:not([data-theme="light"]) .icon-btn,
+:root:not([data-theme="light"]) .live-pill,
+:root:not([data-theme="light"]) .nav-toggle {
+  background: rgba(8, 16, 30, .72);
+  border-color: rgba(170, 210, 255, .30);
+  color: #E6EEFF;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+:root:not([data-theme="light"]) .icon-btn:hover,
+:root:not([data-theme="light"]) .live-pill:hover {
+  border-color: rgba(0, 229, 255, .6);
+  box-shadow: var(--glow-cyan);
+  color: #FFFFFF;
+}
+:root:not([data-theme="light"]) .coach-chip {
+  border-color: rgba(255, 191, 96, .55);
+  background: rgba(255, 191, 96, .12);
+  color: var(--gold);
+  box-shadow: 0 0 10px rgba(255, 191, 96, .18);
+}
+
+/* ---------- Rooms + tab strip: a long glass bar ------------------------ */
+:root:not([data-theme="light"]) .subnav {
+  background: rgba(2, 3, 9, .82);
+  border-bottom: 1px solid rgba(150, 190, 255, .12);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+:root:not([data-theme="light"]) .rooms {
+  background: rgba(8, 16, 30, .72);
+  border: 1px solid rgba(170, 210, 255, .32);
+  border-radius: 999px;
+  padding: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 0 12px rgba(0, 160, 255, .10);
+}
+:root:not([data-theme="light"]) .room-btn {
+  border-radius: 999px;
+  color: #CFD9EC;
+}
+:root:not([data-theme="light"]) .room-btn .lock {
+  border-color: rgba(170, 210, 255, .35);
+  color: #9FB0CC;
+}
+
+/* The tab strip becomes a bar; the active tab becomes a lit pill. */
+:root:not([data-theme="light"]) .subnav-inner {
+  gap: 4px;
+  padding: 8px 6px;
+  margin: 10px 0 14px;
+  border: 1px solid rgba(170, 210, 255, .30);
+  border-radius: 999px;
+  background: rgba(8, 16, 30, .72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 0 14px rgba(0, 160, 255, .10);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  width: max-content;
+  max-width: calc(100% - 40px);
+}
+:root:not([data-theme="light"]) .navtab {
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: #CFD9EC;
+  font-size: 14.5px;
+  letter-spacing: .09em;
+  transition: color .18s, background .22s var(--ease), box-shadow .22s var(--ease);
+}
+:root:not([data-theme="light"]) .navtab::after { display: none; }
+:root:not([data-theme="light"]) .navtab:hover { color: #FFFFFF; background: rgba(170, 210, 255, .08); }
+
+/* Selected: cyan-to-violet, white text kept readable by a dark underlay
+   and a crisp white edge, so the gradient is a glow rather than a fill the
+   type has to fight. */
+:root:not([data-theme="light"]) .navtab.active,
+:root:not([data-theme="light"]) .room-btn.active,
+:root:not([data-theme="light"]) .seg-btn.active {
+  position: relative;
+  color: #FFFFFF;
+  background:
+    linear-gradient(rgba(4, 8, 20, .42), rgba(4, 8, 20, .42)),
+    var(--chrome-grad);
+  border: 1px solid rgba(255, 255, 255, .82);
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, .45),
+    0 0 20px rgba(167, 84, 255, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .55);
+  font-weight: 700;
+}
+:root:not([data-theme="light"]) .room-btn.active .lock {
+  border-color: rgba(255, 255, 255, .55);
+  color: #FFFFFF;
+}
+
+/* Segmented controls get the same bar treatment, smaller. */
+:root:not([data-theme="light"]) .seg {
+  background: rgba(8, 16, 30, .72);
+  border: 1px solid rgba(170, 210, 255, .30);
+  border-radius: 999px;
+  padding: 3px;
+}
+:root:not([data-theme="light"]) .seg-btn { border-radius: 999px; color: #CFD9EC; }
+:root:not([data-theme="light"]) .seg-btn:hover:not(.active):not(:disabled) { color: #FFF; background: rgba(170, 210, 255, .08); }
+
+/* ---------- Hero: the scoreboard strip ---------------------------------- */
+:root:not([data-theme="light"]) .hero {
+  background: linear-gradient(180deg, rgba(8, 16, 30, .78), rgba(2, 3, 9, .55));
+  border-bottom: 1px solid rgba(150, 190, 255, .14);
+}
+:root:not([data-theme="light"]) .hero::before {
+  background-image: repeating-linear-gradient(115deg, rgba(170, 210, 255, .035) 0 1px, transparent 1px 7px);
+}
+:root:not([data-theme="light"]) .hero::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--chrome-line); opacity: .8; pointer-events: none;
+}
+:root:not([data-theme="light"]) .hero-logo {
+  filter: drop-shadow(0 0 16px rgba(0, 229, 255, .35)) drop-shadow(0 8px 24px rgba(0, 0, 0, .75));
+}
+:root:not([data-theme="light"]) .hero-tag {
+  background: rgba(8, 16, 30, .72);
+  border-color: rgba(170, 210, 255, .30);
+  color: #E6EEFF;
+}
+:root:not([data-theme="light"]) .hero-tag b { color: var(--cyan); border-right-color: rgba(170, 210, 255, .28); }
+:root:not([data-theme="light"]) .hero-tag-link:hover { border-color: rgba(0, 229, 255, .6); box-shadow: var(--glow-cyan); }
+:root:not([data-theme="light"]) .hero-record { border-left-color: rgba(170, 210, 255, .22); }
+
+/* Record numbers in polished metal. */
+:root:not([data-theme="light"]) .hrec-val {
+  font-size: 40px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #D9E8FF 30%, #FFFFFF 46%, #9FB5DC 62%, #FFFFFF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(100, 180, 255, .22));
+}
+:root:not([data-theme="light"]) .hrec-lab { color: #9FB0CC; }
+
+/* ---------- Stat tiles: four lit cards ---------------------------------- */
+:root:not([data-theme="light"]) .statbar { gap: 16px; }
+:root:not([data-theme="light"]) .tile {
+  padding: 18px 20px 16px;
+  --accent: var(--cyan);
+  --accent-rgb: 0, 229, 255;
+  border-color: rgba(var(--accent-rgb), .45);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, .45),
+    0 0 14px rgba(var(--accent-rgb), .16),
+    inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+:root:not([data-theme="light"]) .tile::after { display: none; }
+:root:not([data-theme="light"]) .tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(var(--accent-rgb), .85);
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, .55),
+    0 0 22px rgba(var(--accent-rgb), .32),
+    inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+/* Accent per position, so the row reads cyan / violet / blue / gold / pink
+   without any of those meaning "good" or "bad". */
+:root:not([data-theme="light"]) .tile:nth-child(2) { --accent: var(--violet);    --accent-rgb: 167, 84, 255; }
+:root:not([data-theme="light"]) .tile:nth-child(3) { --accent: #4D9BFF;          --accent-rgb: 77, 155, 255; }
+:root:not([data-theme="light"]) .tile:nth-child(4) { --accent: var(--gold);      --accent-rgb: 255, 191, 96; }
+:root:not([data-theme="light"]) .tile:nth-child(5) { --accent: var(--neon-pink); --accent-rgb: 240, 75, 233; }
+:root:not([data-theme="light"]) .tile-lab { color: #BAC5D8; font-size: 12px; letter-spacing: .16em; }
+:root:not([data-theme="light"]) .tile-val {
+  font-size: 40px;
+  color: var(--accent);
+  text-shadow: 0 0 18px rgba(var(--accent-rgb), .45);
+}
+:root:not([data-theme="light"]) .tile-val.txt { font-size: 24px; }
+:root:not([data-theme="light"]) .tile-trend { color: #9FB0CC; font-size: 12px; }
+:root:not([data-theme="light"]) .tile-go { color: rgb(var(--accent-rgb)); opacity: 1; }
+:root:not([data-theme="light"]) .tile-link:hover { background-image: linear-gradient(145deg, rgba(12, 22, 40, .86), rgba(4, 8, 20, .84)); }
+
+/* ---------- Last game ------------------------------------------------------ */
+:root:not([data-theme="light"]) .lg-them { color: #7F8BA3; }
+:root:not([data-theme="light"]) .lg-arm,
+:root:not([data-theme="light"]) .lg-note {
+  background: rgba(14, 22, 42, .70);
+  border-color: rgba(170, 210, 255, .22);
+}
+:root:not([data-theme="light"]) .lg-note { border-left: 2px solid var(--cyan); }
+
+/* ---------- Awards ----------------------------------------------------------- */
+:root:not([data-theme="light"]) .awardcell {
+  background: rgba(14, 22, 42, .62);
+  border: 1px solid rgba(170, 210, 255, .20);
+  border-radius: var(--r);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+:root:not([data-theme="light"]) .awardcell:hover { border-color: rgba(0, 229, 255, .55); box-shadow: var(--glow-cyan); }
+:root:not([data-theme="light"]) .awardcell.is-mvp {
+  border-color: rgba(255, 191, 96, .7);
+  background: linear-gradient(160deg, rgba(255, 191, 96, .14), rgba(14, 22, 42, .62) 60%);
+  box-shadow: 0 0 16px rgba(255, 191, 96, .22), inset 0 1px 0 rgba(255, 220, 160, .25);
+}
+:root:not([data-theme="light"]) .aw-cat { color: var(--cyan); }
+:root:not([data-theme="light"]) .awardcell.is-mvp .aw-cat { color: var(--gold); }
+:root:not([data-theme="light"]) .aw-val { color: #E6EEFF; }
+
+/* ---------- Leaders --------------------------------------------------------- */
+:root:not([data-theme="light"]) .lead-row { border-bottom-color: var(--line-soft); }
+:root:not([data-theme="light"]) .lead-row:hover { background: rgba(0, 229, 255, .05); }
+:root:not([data-theme="light"]) .lead-rank { color: #7F8BA3; }
+:root:not([data-theme="light"]) .lead-row:nth-child(1) .lead-rank { color: var(--gold); text-shadow: 0 0 8px rgba(255, 191, 96, .5); }
+:root:not([data-theme="light"]) .lead-val { color: var(--cyan); }
+
+/* ---------- Development bars -------------------------------------------------- */
+:root:not([data-theme="light"]) .dev-bar { background: rgba(170, 210, 255, .10); }
+:root:not([data-theme="light"]) .dev-fill { background: var(--chrome-grad); box-shadow: 0 0 8px rgba(0, 229, 255, .35); }
+:root:not([data-theme="light"]) .dev-mid { background: rgba(255, 255, 255, .45); }
+
+/* ---------- Roster cards ------------------------------------------------------- */
+:root:not([data-theme="light"]) .pcard {
+  background-image: linear-gradient(160deg, rgba(10, 18, 34, .92), rgba(2, 5, 14, .90));
+  border-color: rgba(0, 229, 255, .30);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s;
+}
+:root:not([data-theme="light"]) .pcard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 229, 255, .75);
+  box-shadow: 0 0 18px rgba(0, 229, 255, .25), 0 14px 38px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .18);
+}
+:root:not([data-theme="light"]) .pcard::before { background: var(--chrome-grad); }
+:root:not([data-theme="light"]) .pcard-num {
+  background: linear-gradient(145deg, #121C34, #05080F);
+  border: 1px solid rgba(0, 229, 255, .55);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(0, 229, 255, .22), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+:root:not([data-theme="light"]) .pcard-name { color: #FFFFFF; }
+:root:not([data-theme="light"]) .pcard-role { color: #9FB0CC; }
+:root:not([data-theme="light"]) .pcard-stats { border-top-color: var(--line-soft); }
+:root:not([data-theme="light"]) .pcard-stat { border-right-color: var(--line-soft); }
+:root:not([data-theme="light"]) .pcard-stat .v { color: #FFFFFF; }
+
+/* Position / tier pills: cyan, violet, pink. Grade badges keep their colours. */
+:root:not([data-theme="light"]) .tier-1 { background: rgba(255, 191, 96, .14); color: var(--gold);   border-color: rgba(255, 191, 96, .55); }
+:root:not([data-theme="light"]) .tier-2 { background: rgba(0, 229, 255, .12);  color: var(--cyan);   border-color: rgba(0, 229, 255, .55); }
+:root:not([data-theme="light"]) .tier-3 { background: rgba(167, 84, 255, .14); color: #C9A3FF;       border-color: rgba(167, 84, 255, .6); }
+:root:not([data-theme="light"]) .badge,
+:root:not([data-theme="light"]) .ach {
+  background: rgba(14, 22, 42, .70);
+  border-color: rgba(170, 210, 255, .28);
+  color: #D5DFF0;
+}
+:root:not([data-theme="light"]) .badge-info { border-color: rgba(0, 229, 255, .5); color: var(--cyan); }
+
+/* ---------- Tables: dark navy rows, clean separators ------------------------- */
+:root:not([data-theme="light"]) table.stat thead th { background: rgba(8, 16, 30, .92); color: #9FB0CC; border-bottom: 1px solid var(--line); }
+:root:not([data-theme="light"]) table.stat tbody td { border-bottom-color: var(--line-soft); }
+:root:not([data-theme="light"]) table.stat tbody tr:nth-child(even) td { background: rgba(170, 210, 255, .025); }
+:root:not([data-theme="light"]) table.stat tbody tr:hover td { background: rgba(0, 229, 255, .06); }
+:root:not([data-theme="light"]) table.stat td.stick,
+:root:not([data-theme="light"]) table.stat th.stick { background: rgba(8, 14, 28, .96); }
+:root:not([data-theme="light"]) table.stat tbody tr:hover td.stick { background: rgba(12, 22, 40, .98); }
+:root:not([data-theme="light"]) .pnum { background: rgba(14, 22, 42, .8); border-color: rgba(0, 229, 255, .35); color: var(--cyan); }
+:root:not([data-theme="light"]) tr.is-leader td { background: rgba(255, 191, 96, .06); }
+
+/* ---------- Buttons ------------------------------------------------------------- */
+:root:not([data-theme="light"]) .btn {
+  border-radius: 999px;
+  border-color: rgba(170, 210, 255, .30);
+  background: rgba(8, 16, 30, .72);
+  color: #E6EEFF;
+}
+:root:not([data-theme="light"]) .btn:hover { border-color: rgba(0, 229, 255, .6); box-shadow: var(--glow-cyan); color: #FFF; }
+:root:not([data-theme="light"]) .btn-ghost { background: transparent; }
+
+/* The holographic primary: cyan - blue - violet - pink, white edge, dark type
+   so it stays readable across every stop, and a sheen that only moves on hover. */
+:root:not([data-theme="light"]) .btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(105deg, #00D8FF 0%, #4287FF 23%, #A754FF 47%, #F04BE9 72%, #00E5FF 100%);
+  background-size: 200% 100%;
+  border: 2px solid rgba(255, 255, 255, .82);
+  color: #090713;
+  font-weight: 900;
+  text-shadow: none;
+  box-shadow: 0 0 18px rgba(0, 220, 255, .28), inset 0 2px 8px rgba(255, 255, 255, .45);
+  transition: background-position .6s var(--ease), box-shadow .25s, transform .2s var(--ease);
+}
+:root:not([data-theme="light"]) .btn-primary:hover {
+  background-position: 100% 0;
+  box-shadow: 0 0 26px rgba(0, 220, 255, .42), 0 0 30px rgba(167, 84, 255, .25), inset 0 2px 8px rgba(255, 255, 255, .5);
+  transform: translateY(-1px);
+  filter: none;
+  color: #090713;
+}
+:root:not([data-theme="light"]) .btn-primary::after {
+  content: '';
+  position: absolute; top: -40%; bottom: -40%; left: -60%; width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .55), transparent);
+  transform: skewX(-18deg);
+  transition: left .7s var(--ease);
+  pointer-events: none;
+}
+:root:not([data-theme="light"]) .btn-primary:hover::after { left: 130%; }
+:root:not([data-theme="light"]) .btn-danger { border-color: rgba(255, 75, 115, .55); color: var(--bad); background: var(--bad-bg); }
+
+/* ---------- Forms, modal, misc ------------------------------------------------- */
+:root:not([data-theme="light"]) .input,
+:root:not([data-theme="light"]) select.input,
+:root:not([data-theme="light"]) textarea.input {
+  background: rgba(8, 14, 28, .86);
+  border-color: rgba(170, 210, 255, .28);
+  color: #FFFFFF;
+}
+:root:not([data-theme="light"]) .input:focus { border-color: var(--cyan); box-shadow: var(--glow-cyan); }
+:root:not([data-theme="light"]) .modal-scrim,
+:root:not([data-theme="light"]) .drawer-scrim { background: rgba(2, 3, 9, .72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+:root:not([data-theme="light"]) .hint { color: #8F9BB5; }
+:root:not([data-theme="light"]) .empty-rule { background: var(--chrome-grad); }
+:root:not([data-theme="light"]) .section-head h2::before { background: var(--chrome-grad); box-shadow: 0 0 8px rgba(0, 229, 255, .45); }
+:root:not([data-theme="light"]) .foot { border-top-color: rgba(150, 190, 255, .12); color: #7F8BA3; }
+:root:not([data-theme="light"]) .foot-brand img { filter: drop-shadow(0 0 6px rgba(0, 229, 255, .3)); }
+
+/* Focus rings follow the charge. */
+:root:not([data-theme="light"]) .seg-btn:focus-visible,
+:root:not([data-theme="light"]) .icon-btn:focus-visible,
+:root:not([data-theme="light"]) .room-btn:focus-visible,
+:root:not([data-theme="light"]) .navtab:focus-visible,
+:root:not([data-theme="light"]) .btn:focus-visible,
+:root:not([data-theme="light"]) .tile-link:focus-visible,
+:root:not([data-theme="light"]) .pcard:focus-visible,
+:root:not([data-theme="light"]) .lead-row:focus-visible,
+:root:not([data-theme="light"]) .brand:focus-visible,
+:root:not([data-theme="light"]) .hero-tag-link:focus-visible,
+:root:not([data-theme="light"]) .foot a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Motion: restrained, and off entirely when asked ------------------- */
+:root:not([data-theme="light"]) .page.active { animation: fadeUp .26s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-theme="light"]) .btn-primary::after { display: none; }
+  :root:not([data-theme="light"]) .tile:hover,
+  :root:not([data-theme="light"]) .pcard:hover,
+  :root:not([data-theme="light"]) .btn-primary:hover { transform: none; }
+}
+
+/* ---------- Phone ---------------------------------------------------------- */
+@media (max-width: 720px) {
+  :root:not([data-theme="light"]) .brand-name { font-size: 17px; }
+  :root:not([data-theme="light"]) .subnav-inner { max-width: calc(100% - 28px); margin: 8px 0 10px; }
+  :root:not([data-theme="light"]) .navtab { padding: 9px 13px; font-size: 13.5px; }
+  :root:not([data-theme="light"]) .tile-val { font-size: 34px; }
+  :root:not([data-theme="light"]) .hrec-val { font-size: 34px; }
+  /* blur is the expensive part on a phone; keep it where it is seen most */
+  :root:not([data-theme="light"]) .card,
+  :root:not([data-theme="light"]) .pcard { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+}
+
+/* The footer sits exactly where the lower ribbons live, so it gets a glass
+   backing of its own rather than letting a credit line fight a highlight. */
+:root:not([data-theme="light"]) .foot {
+  background: linear-gradient(180deg, rgba(2, 3, 9, 0), rgba(2, 3, 9, .85) 40%);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #9FB0CC;
+}

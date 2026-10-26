@@ -1,0 +1,123 @@
+/* ==========================================================================
+   PROSPECTS PRIME 10U — SEASON REVIEW
+   Styles for the game-by-game page. Everything reads from the same tokens
+   as the rest of the app, so it follows the dark, light and chrome themes.
+   ========================================================================== */
+
+/* ---- tiles: five across on desktop, two on a phone ---- */
+.season-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 980px) { .season-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .season-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- game rows ---- */
+.season-games { max-height: 520px; overflow-y: auto; }
+.sg { border-bottom: 1px solid var(--line-soft); }
+.sg:last-child { border-bottom: none; }
+.sg-head {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 16px; background: transparent; border: none; color: var(--text);
+  text-align: left; cursor: pointer; font: inherit;
+  transition: background .14s;
+}
+.sg-head:hover { background: rgba(255,255,255,.03); }
+.sg-head:focus-visible { outline: 2px solid var(--chrome); outline-offset: -2px; }
+.sg-date { display: flex; flex-direction: column; width: 58px; flex-shrink: 0; line-height: 1.15; }
+.sg-date b { font-family: var(--f-display); font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+.sg-date i { font-style: normal; font-size: 10.5px; color: var(--text-3); font-family: var(--f-num); }
+.sg-main { flex: 1 1 auto; min-width: 0; }
+.sg-opp { display: block; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg-opp .ha { color: var(--text-3); font-weight: 500; margin-right: 6px; font-size: 12px; }
+.sg-sub { display: block; font-size: 11.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.sg-score { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.sg-score b { font-family: var(--f-num); font-size: 15px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.sg-score i {
+  font-style: normal; font-family: var(--f-display); font-weight: 700; font-size: 11px; letter-spacing: .08em;
+  padding: 2px 7px; border-radius: 3px; border: 1px solid var(--line);
+}
+.sg-score.win i  { background: var(--good-bg); color: var(--good); border-color: rgba(61,220,145,.35); }
+.sg-score.loss i { background: var(--bad-bg);  color: var(--bad);  border-color: rgba(255,107,107,.35); }
+.sg-score.tie i  { background: var(--surface-3); color: var(--text-3); }
+.sg.open .sg-head { background: rgba(255,255,255,.035); }
+.sg-body { padding: 4px 16px 16px; animation: fadeUp .22s ease both; }
+table.stat.season-box { min-width: 520px; }
+.season-box td .pnum { margin-right: 6px; }
+
+/* ---- wins vs losses ---- */
+table.stat.season-splits { min-width: 0; }
+.season-splits td:nth-child(2), .season-splits td:nth-child(3) { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+
+/* ---- hit chart ---- */
+table.stat.hitchart { min-width: 0; border-collapse: separate; border-spacing: 0; }
+.hitchart thead th.hc-g {
+  padding: 6px 2px; text-align: center; font-size: 10px; color: var(--text-3); min-width: 26px;
+}
+.hitchart thead th.hc-g span {
+  display: inline-block; width: 20px; height: 20px; line-height: 20px; border-radius: 4px;
+  font-family: var(--f-num); font-size: 10px;
+}
+.hitchart thead th.hc-g.win span  { background: var(--good-bg); color: var(--good); }
+.hitchart thead th.hc-g.loss span { background: var(--bad-bg);  color: var(--bad); }
+.hitchart td.hc-name { white-space: nowrap; }
+.hitchart td.hc-name i { font-style: normal; color: var(--text-3); font-family: var(--f-num); font-size: 11px; margin-left: 8px; }
+.hitchart td.hc-c { padding: 4px 2px; text-align: center; }
+.hitchart td.hc-c span, .hc-legend i {
+  display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 5px;
+  font-family: var(--f-num); font-size: 11px; font-weight: 600; text-align: center;
+  background: var(--surface-3); color: var(--text-3); border: 1px solid transparent;
+}
+.hitchart td.hc-c.multi span, .hc-legend i.multi { background: var(--good); color: #06110B; }
+.hitchart td.hc-c.hit span,   .hc-legend i.hit   { background: rgba(61,220,145,.28); color: var(--good); border-color: rgba(61,220,145,.4); }
+.hitchart td.hc-c.ob span,    .hc-legend i.ob    { background: var(--info-bg); color: var(--info); border-color: rgba(87,182,255,.35); }
+.hitchart td.hc-c.out span,   .hc-legend i.out   { background: var(--surface-3); color: var(--text-3); }
+.hitchart td.hc-c.kk span,    .hc-legend i.kk    { background: var(--bad-bg); color: var(--bad); border-color: rgba(255,107,107,.3); }
+.hitchart td.hc-c.none span,  .hc-legend i.none  { background: transparent; border: 1px dashed var(--line); }
+.hitchart td.hc-tot { font-family: var(--f-num); font-weight: 600; }
+.hc-legend { font-size: 11.5px; color: var(--text-2); }
+.hc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.hc-legend i { width: 16px; height: 16px; line-height: 16px; }
+
+/* ---- trends ---- */
+table.stat.season-trends { min-width: 820px; }
+.season-trends td .pnum { margin-right: 6px; }
+.sparkcell { padding-top: 4px !important; padding-bottom: 4px !important; }
+.spark { display: block; margin: 0 auto; overflow: visible; }
+
+/* ---- arm usage ---- */
+.arm { padding: 12px 16px; border-bottom: 1px solid var(--line-soft); cursor: pointer; transition: background .14s; }
+.arm:last-child { border-bottom: none; }
+.arm:hover { background: rgba(255,255,255,.03); }
+.arm-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.arm-name { font-weight: 600; font-size: 13.5px; }
+.arm-name .pnum { margin-right: 6px; }
+.arm-line { font-size: 11.5px; color: var(--text-3); }
+.arm-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 6px 0 8px; font-family: var(--f-num); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.arm-stats i { font-style: normal; font-family: var(--f-display); font-size: 10px; letter-spacing: .1em; color: var(--text-3); margin-left: 2px; }
+.arm-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.arm-dot {
+  position: relative; display: inline-flex; align-items: flex-end; justify-content: center;
+  width: 30px; height: 34px; border-radius: 4px; background: var(--surface-3); border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+.arm-dot i {
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--w);
+  background: linear-gradient(180deg, rgba(87,182,255,.75), rgba(87,182,255,.35));
+}
+.arm-dot.heavy i { background: linear-gradient(180deg, rgba(255,107,107,.9), rgba(255,107,107,.45)); }
+.arm-dot b {
+  position: relative; font-family: var(--f-num); font-size: 10px; font-weight: 600; color: var(--text);
+  padding-bottom: 2px; text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+:root[data-theme="light"] .arm-dot b { text-shadow: none; }
+
+/* ---- positions ---- */
+table.stat.posgrid { min-width: 0; }
+.posgrid td.pg-c { text-align: center; font-family: var(--f-num); font-size: 11.5px; padding: 6px 4px; }
+.posgrid td.pg-c.on { background: rgba(87,182,255, calc(var(--a) * .35)); color: var(--text); border-radius: 0; }
+.posgrid td.pg-t { font-family: var(--f-num); font-weight: 600; }
+:root[data-theme="light"] .posgrid td.pg-c.on { background: rgba(22,103,168, calc(var(--a) * .3)); }
+
+/* ---- coarse pointer: bigger targets ---- */
+@media (pointer: coarse) {
+  .sg-head { padding: 13px 16px; }
+  .hitchart td.hc-c span { width: 26px; height: 26px; line-height: 26px; }
+}

@@ -19,10 +19,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/base.css?v=20260916b">
-<link rel="stylesheet" href="css/layout.css?v=20260916b">
-<link rel="stylesheet" href="css/components.css?v=20260916b">
-<link rel="stylesheet" href="css/cards.css?v=20260916b">
+<link rel="stylesheet" href="css/base.css?v=20261026a">
+<link rel="stylesheet" href="css/layout.css?v=20261026a">
+<link rel="stylesheet" href="css/components.css?v=20261026a">
+<link rel="stylesheet" href="css/cards.css?v=20261026a">
+<link rel="stylesheet" href="css/season.css?v=20261026a">
+<link rel="stylesheet" href="css/chrome.css?v=20261026a">
 
 <script>
 /* Set the theme before the first paint. Doing this from app.js would show a
@@ -85,6 +87,7 @@
     </div>
     <div class="wrap subnav-inner" id="subnavInner">
       <button class="navtab active" data-tab="dashboard" data-room="dugout">Home</button>
+      <button class="navtab" data-tab="season" data-room="dugout">Season</button>
       <button class="navtab" data-tab="myplayer" data-room="dugout">My Player</button>
       <button class="navtab" data-tab="roster" data-room="dugout">Roster</button>
       <button class="navtab" data-tab="batting" data-room="dugout">Batting</button>
@@ -137,6 +140,11 @@
       <section class="page active" id="page-dashboard">
         <div class="statbar" id="statbar"></div>
         <div id="dashboardBody"></div>
+      </section>
+
+      <!-- ==================== SEASON REVIEW ==================== -->
+      <section class="page" id="page-season">
+        <div id="seasonBody"></div>
       </section>
 
       <!-- ==================== MY PLAYER ==================== -->
@@ -240,22 +248,23 @@
 </div>
 
 <!-- Chart.js is vendored locally so the site works with no CDN dependency. -->
-<script src="vendor/chart.umd.min.js?v=20260916b"></script>
-<script src="js/config.js?v=20260916b"></script>
-<script src="js/csv.js?v=20260916b"></script>
-<script src="js/stats.js?v=20260916b"></script>
-<script src="js/store.js?v=20260916b"></script>
-<script src="js/drills.js?v=20260916b"></script>
-<script src="js/insights.js?v=20260916b"></script>
-<script src="js/lineup.js?v=20260916b"></script>
-<script src="js/schedule.js?v=20260916b"></script>
-<script src="js/gamelog.js?v=20260916b"></script>
-<script src="js/progress.js?v=20260916b"></script>
-<script src="js/charts.js?v=20260916b"></script>
-<script src="js/views.js?v=20260916b"></script>
-<script src="js/matchup.js?v=20260916b"></script>
-<script src="js/myplayer.js?v=20260916b"></script>
-<script src="js/cards.js?v=20260916b"></script>
-<script src="js/app.js?v=20260916b"></script>
+<script src="vendor/chart.umd.min.js?v=20261026a"></script>
+<script src="js/config.js?v=20261026a"></script>
+<script src="js/csv.js?v=20261026a"></script>
+<script src="js/stats.js?v=20261026a"></script>
+<script src="js/store.js?v=20261026a"></script>
+<script src="js/drills.js?v=20261026a"></script>
+<script src="js/insights.js?v=20261026a"></script>
+<script src="js/lineup.js?v=20261026a"></script>
+<script src="js/schedule.js?v=20261026a"></script>
+<script src="js/gamelog.js?v=20261026a"></script>
+<script src="js/progress.js?v=20261026a"></script>
+<script src="js/charts.js?v=20261026a"></script>
+<script src="js/views.js?v=20261026a"></script>
+<script src="js/season.js?v=20261026a"></script>
+<script src="js/matchup.js?v=20261026a"></script>
+<script src="js/myplayer.js?v=20261026a"></script>
+<script src="js/cards.js?v=20261026a"></script>
+<script src="js/app.js?v=20261026a"></script>
 </body>
 </html>
