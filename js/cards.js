@@ -75,6 +75,18 @@ P10.Cards = (function () {
 
   function teamPhotoUrl(name) { return 'assets/players/' + slug(name) + '.jpg'; }
 
+  /* The photo to show for a player anywhere outside the card: this
+     device's own copy first, then the team photo, else null. */
+  function photoSrc(name) {
+    return getPhoto(name) || (hasTeamPhoto(name) ? teamPhotoUrl(name) : null);
+  }
+
+  /* Tell the rest of the app a photo changed, so the small headshots on
+     the roster, the drawer and My Player catch up without a reload. */
+  function photoChanged(name) {
+    try { document.dispatchEvent(new CustomEvent('p10:photo', { detail: { name: name } })); } catch (e) {}
+  }
+
   function photoCount() {
     var n = 0;
     try {
@@ -521,6 +533,7 @@ P10.Cards = (function () {
     if (removeBtn) {
       removeBtn.addEventListener('click', function () {
         clearPhoto(p.name);
+        photoChanged(p.name);
         mount(host, p, all, { spin: false });
       });
     }
@@ -650,6 +663,7 @@ P10.Cards = (function () {
         // Re-render so the new photo is on screen immediately, then push it
         // to the team from the fresh card.
         mount(host, p, all, { spin: false, autoShare: true });
+        photoChanged(p.name);
       }).catch(function (e) {
         showErr(e.message || 'That photo could not be added.');
       });
@@ -668,6 +682,7 @@ P10.Cards = (function () {
     uploadToTeam: uploadToTeam,
     teamPhotoUrl: teamPhotoUrl,
     hasTeamPhoto: hasTeamPhoto,
+    photoSrc: photoSrc,
     loadManifest: loadManifest,
     processImage: processImage,
     setPhoto: setPhoto,

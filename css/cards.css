@@ -560,3 +560,53 @@ table.bbb-tbl tr:last-child td { border-bottom: none; }
 @media (pointer: coarse) {
   .card-hint { font-size: 12.5px; }
 }
+
+/* ==========================================================================
+   HEADSHOTS
+   Wherever a player shows as a jersey-number box (roster cards, the player
+   drawer, My Player), a player with a photo shows the photo instead, with
+   his number on a small patch in the bottom-right corner. Players without a
+   photo keep the number box.
+
+   Most team photos are action shots with the player small in the frame,
+   so the image is zoomed and aimed at the upper middle, where the head
+   usually is.
+   ========================================================================== */
+.pcard-num.has-photo,
+.drawer-num.has-photo,
+.mp-num.has-photo,
+.pickcard-num.has-photo {
+  position: relative;
+  overflow: visible;
+  padding: 0;
+  color: transparent;
+  background-color: var(--surface-3);
+  background-repeat: no-repeat;
+  background-size: 230% auto;
+  background-position: 50% 22%;
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--line-strong), 0 4px 12px -4px rgba(16,22,32,.35);
+}
+.has-photo .hs-num {
+  position: absolute; right: -6px; bottom: -6px;
+  min-width: 22px; height: 22px; padding: 0 5px;
+  border-radius: 6px;
+  background: var(--chrome);
+  color: #FFFFFF;
+  font-family: var(--f-display); font-size: 13px; font-weight: 700; line-height: 22px;
+  letter-spacing: .02em; text-align: center; font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.pcard-num.has-photo   { width: 56px; height: 56px; border-radius: 12px; }
+.drawer-num.has-photo  { width: 66px; height: 66px; border-radius: 14px; }
+.mp-num.has-photo      { width: 64px; height: 64px; border-radius: 14px; }
+.pickcard-num.has-photo{ width: 58px; height: 58px; border-radius: 12px; }
+.drawer-num.has-photo .hs-num,
+.mp-num.has-photo .hs-num { min-width: 26px; height: 26px; line-height: 26px; font-size: 15px; border-radius: 7px; }
+
+@media (max-width: 720px) {
+  .pcard-num.has-photo  { width: 48px; height: 48px; border-radius: 11px; }
+  .drawer-num.has-photo { width: 56px; height: 56px; }
+  .has-photo .hs-num    { min-width: 20px; height: 20px; line-height: 20px; font-size: 12px; right: -5px; bottom: -5px; }
+}

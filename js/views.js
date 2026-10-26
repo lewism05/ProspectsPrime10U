@@ -579,7 +579,7 @@ P10.Views = (function () {
 
     return '<div class="pcard" data-player="' + esc(p.name) + '">' +
       '<div class="pcard-top">' +
-        '<div class="pcard-num">' + (p.num !== null && p.num !== undefined ? p.num : '–') + '</div>' +
+        numBox(p, 'pcard-num') +
         '<div class="pcard-id grow">' +
           '<div class="pcard-name">' + esc(p.name) + '</div>' +
           '<div class="pcard-role">' + esc(p.role) + '</div>' +
@@ -595,6 +595,20 @@ P10.Views = (function () {
         '<div class="pcard-stat"><div class="v">' + esc(s2) + '</div><div class="l">' + l2 + '</div></div>' +
         '<div class="pcard-stat"><div class="v">' + esc(s3) + '</div><div class="l">' + l3 + '</div></div>' +
       '</div></div>';
+  }
+
+  /* The jersey-number box, or the player's photo with his number in the
+     corner when one exists (this device's copy or the team photo). Used
+     on the roster cards, the player drawer and My Player. */
+  function numBox(p, cls, tag) {
+    tag = tag || 'div';
+    var n = (p.num !== null && p.num !== undefined) ? String(p.num) : '–';
+    var src = (P10.Cards && P10.Cards.photoSrc) ? P10.Cards.photoSrc(p.name) : null;
+    var hs = ' data-hs="' + esc(p.name) + '" data-hs-cls="' + cls + '" data-hs-tag="' + tag + '"';
+    if (!src) return '<' + tag + ' class="' + cls + '"' + hs + '>' + esc(n) + '</' + tag + '>';
+    return '<' + tag + ' class="' + cls + ' has-photo"' + hs + ' role="img" aria-label="' + esc(p.name + ', number ' + n) + '"' +
+      ' style="background-image:url(\'' + esc(src) + '\')">' +
+      '<span class="hs-num">' + esc(n) + '</span></' + tag + '>';
   }
 
   /* ==================================================================
@@ -1368,11 +1382,48 @@ P10.Views = (function () {
   /* ==================================================================
      PLAYER DRAWER
      ================================================================== */
+  function paintDrawerNum(p) {
+    var el = $('drawerNum');
+    if (!el) return;
+    var tmp = document.createElement('div');
+    tmp.innerHTML = numBox(p, 'drawer-num');
+    var box = tmp.firstChild;
+    el.className = box.className;
+    el.setAttribute('style', box.getAttribute('style') || '');
+    if (box.getAttribute('role')) { el.setAttribute('role', 'img'); el.setAttribute('aria-label', box.getAttribute('aria-label')); }
+    else { el.removeAttribute('role'); el.removeAttribute('aria-label'); }
+    el.innerHTML = box.innerHTML;
+    el.setAttribute('data-player', p.name);
+    el.removeAttribute('data-hs');
+  }
+
+  /* A photo was added or removed: repaint the drawer header and whichever
+     page is up, so the new headshot shows everywhere straight away. */
+  document.addEventListener('p10:photo', function (e) {
+    var st = P10.Store && P10.Store.state;
+    if (!st || !st.players) return;
+    var el = $('drawerNum');
+    var name = el && el.getAttribute('data-player');
+    var p = name && st.players.filter(function (x) { return x.name === name; })[0];
+    if (p) paintDrawerNum(p);
+    // Swap the small headshots in place rather than re-rendering pages, so
+    // a card that is mid-upload is left alone.
+    var who = e.detail && e.detail.name;
+    var q = st.players.filter(function (x) { return x.name === who; })[0];
+    if (!q) return;
+    Array.prototype.forEach.call(document.querySelectorAll('[data-hs]'), function (node) {
+      if (node.id === 'drawerNum' || node.getAttribute('data-hs') !== who) return;
+      var tmp = document.createElement('div');
+      tmp.innerHTML = numBox(q, node.getAttribute('data-hs-cls'), node.getAttribute('data-hs-tag'));
+      node.parentNode.replaceChild(tmp.firstChild, node);
+    });
+  });
+
   function renderDrawer(name, st) {
     var p = st.players.filter(function (x) { return x.name === name; })[0];
     if (!p) return;
 
-    $('drawerNum').textContent = p.num !== null && p.num !== undefined ? p.num : '–';
+    paintDrawerNum(p);
     $('drawerName').textContent = p.name;
     $('drawerRole').textContent = p.role;
 
@@ -1530,6 +1581,7 @@ P10.Views = (function () {
   return {
     _weather: null,
     esc: esc,
+    numBox: numBox,
     renderHero: renderHero,
     sampleBanner: sampleBanner,
     renderStatbar: renderStatbar,

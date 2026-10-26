@@ -95,7 +95,7 @@ P10.MyPlayer = (function () {
     /* ---- header ---- */
     html += '<div class="mp-head">' +
       '<div class="mp-id">' +
-        '<span class="mp-num">' + (p.num !== null && p.num !== undefined ? p.num : '–') + '</span>' +
+        P10.Views.numBox(p, 'mp-num', 'span') +
         '<span>' +
           '<h2 class="mp-name">' + esc(p.name) + '</h2>' +
           '<div class="mp-role">' + esc(p.role) + '</div>' +
@@ -250,7 +250,7 @@ P10.MyPlayer = (function () {
       players.map(function (p) {
         return '<button class="pickcard' + (p.name === current ? ' on' : '') +
           '" data-pick-mine="' + esc(p.name) + '">' +
-          '<span class="pickcard-num">' + (p.num !== null && p.num !== undefined ? p.num : '–') + '</span>' +
+          P10.Views.numBox(p, 'pickcard-num', 'span') +
           '<span class="pickcard-name">' + esc(p.name) + '</span>' +
           (p.position ? '<span class="pickcard-pos">' + esc(p.position) + '</span>' : '') +
           '</button>';
