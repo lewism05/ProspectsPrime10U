@@ -73,13 +73,18 @@ P10.Visits = (function () {
       coach: !!(P10.Store && P10.Store.state.coach),
       phone: window.matchMedia('(max-width: 720px)').matches
     });
-    try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(URL, new Blob([body], { type: 'application/json' }));
-      } else {
-        fetch(URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body, keepalive: true }).catch(function () {});
-      }
-    } catch (e) {}
+    /* Sent as plain text on purpose. Some browsers (older Android Chrome
+       among them) refuse a beacon labelled application/json and throw, and
+       a thrown beacon used to mean a lost visit with no retry. Plain text
+       is accepted everywhere and the function parses the JSON either way.
+       If the beacon is refused or unavailable, a normal request goes out. */
+    var sent = false;
+    try { if (navigator.sendBeacon) sent = navigator.sendBeacon(URL, body); } catch (e) { sent = false; }
+    if (!sent) {
+      try {
+        fetch(URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: body, keepalive: true }).catch(function () {});
+      } catch (e) {}
+    }
   }
 
   /* ---------------- admin summary ---------------- */

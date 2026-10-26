@@ -185,7 +185,10 @@ exports.handler = async function (event) {
   }
 
   if (event.httpMethod === 'POST') {
-    try { return await record(store, event.body); }
+    /* Some clients' bodies arrive base64-encoded; decode those first. */
+    let raw = event.body || '';
+    if (event.isBase64Encoded) { try { raw = Buffer.from(raw, 'base64').toString('utf8'); } catch (e) {} }
+    try { return await record(store, raw); }
     catch (e) { return reply(500, { error: 'Could not save the visit.', detail: String(e.message || e) }); }
   }
 
