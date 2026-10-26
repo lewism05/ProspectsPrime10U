@@ -224,6 +224,20 @@ P10.Season = (function () {
     A.heavy.sort(function (a, b) { return b.pitches - a.pitches; });
     A.maxPitches = max;
 
+    /* head to head, every club we have seen more than once first */
+    var opp = {}, oppOrder = [];
+    games.forEach(function (g) {
+      var k = P10.GameLog.oppKey(g.opponent);
+      if (!opp[k]) { opp[k] = { name: g.opponent, games: [] }; oppOrder.push(k); }
+      opp[k].games.push(g);
+    });
+    A.opponents = oppOrder.map(function (k) {
+      var o = opp[k], r = rec(o.games);
+      r.name = o.name; r.games = o.games;
+      r.rf = sum(o.games, function (g) { return g.us; }); r.ra = sum(o.games, function (g) { return g.them; });
+      return r;
+    }).sort(function (a, b) { return b.n - a.n || (b.rf - b.ra) - (a.rf - a.ra); });
+
     /* team per-game series for charts */
     A.series = games.map(function (g) {
       var b = g.team.bat;
@@ -256,7 +270,7 @@ P10.Season = (function () {
       var dBB = A.wins.bbAllowedIp - A.losses.bbAllowedIp;
       var dE = A.wins.ePer - A.losses.ePer;
       var bits = [];
-      bits.push('team on-base of ' + rate(A.wins.obp) + ' in wins against ' + rate(A.losses.obp) + ' in losses');
+      bits.push('Team on-base of ' + rate(A.wins.obp) + ' in wins against ' + rate(A.losses.obp) + ' in losses');
       bits.push(rate(A.wins.bbAllowedIp, 2) + ' walks allowed per inning in wins, ' + rate(A.losses.bbAllowedIp, 2) + ' in losses');
       bits.push(rate(A.wins.ePer, 1) + ' errors a game in wins, ' + rate(A.losses.ePer, 1) + ' in losses');
       var biggest = Math.abs(dObp) * 10 >= Math.max(Math.abs(dBB), Math.abs(dE))
@@ -372,7 +386,7 @@ P10.Season = (function () {
       '</div>';
 
     /* ---- results chart + list ---- */
-    html += '<div class="card mb-16">' + cardHead('Game By Game', 'Run differential · tap a game for the box score') +
+    html += '<div class="card mb-16">' + cardHead('Game By Game', 'Tap a game for the box score') +
       '<div class="card-body"><div class="chart-box"><canvas id="chartSeasonDiff"></canvas></div></div>' +
       '<div class="card-body flush season-games">' + A.games.slice().reverse().map(gameRow).join('') + '</div>' +
       '</div>';
@@ -391,6 +405,9 @@ P10.Season = (function () {
       '</div></div>';
     html += splitsCard(A);
     html += '</div>';
+
+    /* ---- opponents + weekends ---- */
+    html += '<div class="grid g-2 mb-16 g-top">' + opponentsCard(A) + weekendsCard(A) + '</div>';
 
     /* ---- scoring + on-base charts ---- */
     html += '<div class="grid g-2 mb-16">' +
@@ -493,6 +510,60 @@ P10.Season = (function () {
       '</div>';
   }
 
+  /* ---------------- opponents + weekends ---------------- */
+  function resultDots(games) {
+    return games.map(function (g) {
+      return '<i class="rdot ' + (g.result === 'W' ? 'win' : g.result === 'L' ? 'loss' : 'tie') + '" title="' +
+        esc(fmtDate(g.date, true) + ' ' + g.us + '-' + g.them) + '">' + g.result + '</i>';
+    }).join('');
+  }
+  function opponentsCard(A) {
+    if (!A.opponents.length) return '';
+    return '<div class="card">' + cardHead('Head To Head', A.opponents.length + ' opponents') +
+      '<div class="card-body flush">' +
+      A.opponents.map(function (o) {
+        var d = o.rf - o.ra;
+        return '<div class="h2h">' +
+          '<span class="h2h-name">' + esc(shortOpp(o.name)) + '<i>' + o.n + ' game' + (o.n > 1 ? 's' : '') + ' · ' + o.rf + '-' + o.ra + ' runs</i></span>' +
+          '<span class="h2h-dots">' + resultDots(o.games) + '</span>' +
+          '<span class="h2h-rec ' + (o.w > o.l ? 'text-good' : o.w < o.l ? 'text-bad' : '') + '">' + o.text + '</span>' +
+          '</div>';
+      }).join('') +
+      '</div><div class="card-body" style="border-top:1px solid var(--line-soft)"><div class="hint">Clubs played more than once sit at the top. The coaches\' room uses the same history for the scouting report before a rematch.</div></div></div>';
+  }
+  function weekendsCard(A) {
+    if (!A.weekends.length) return '';
+    return '<div class="card">' + cardHead('By Weekend', A.weekends.length + ' weekends') +
+      '<div class="card-body flush">' +
+      A.weekends.map(function (w) {
+        var gs = A.games.filter(function (g) { return (g.weekend || g.date) === w.label; });
+        var d = w.rf - w.ra;
+        return '<div class="h2h">' +
+          '<span class="h2h-name">' + esc(w.label) + '<i>' + w.n + ' game' + (w.n > 1 ? 's' : '') + ' · ' + w.rf + '-' + w.ra + ' runs (' + signed(d) + ')</i></span>' +
+          '<span class="h2h-dots">' + resultDots(gs) + '</span>' +
+          '<span class="h2h-rec ' + (w.w > w.l ? 'text-good' : w.w < w.l ? 'text-bad' : '') + '">' + w.text + '</span>' +
+          '</div>';
+      }).join('') +
+      '</div><div class="card-body" style="border-top:1px solid var(--line-soft)">' +
+      '<div class="eyebrow mb-8">Season Line</div>' + seasonLine(A) +
+      '<div class="hint mt-8">Travel ball is played in weekends, so this is the season the way the team lived it.</div></div></div>';
+  }
+
+  function seasonLine(A) {
+    var b = A.all.bat, outs = sum(A.games, function (g) { return g.team.pit ? g.team.pit.outs : 0; });
+    var pit = { h: 0, bb: 0, k: 0, er: 0 };
+    A.games.forEach(function (g) { if (g.team.pit) { pit.h += g.team.pit.h; pit.bb += g.team.pit.bb; pit.k += g.team.pit.k; pit.er += g.team.pit.er; } });
+    var ip = outs / 3;
+    function cell(v, l) { return '<div class="sl"><b>' + esc(v) + '</b><i>' + esc(l) + '</i></div>'; }
+    return '<div class="sl-row">' +
+      cell(rate(b.ab ? b.h / b.ab : 0), 'AVG') + cell(rate(obpOf(b)), 'OBP') + cell(rate(slgOf(b)), 'SLG') + cell(rate(opsOf(b)), 'OPS') +
+      cell(b.h, 'H') + cell(b.b2, '2B') + cell(b.b3, '3B') + cell(b.hr, 'HR') + cell(b.bb, 'BB') + cell(b.k, 'K') + cell(b.sb, 'SB') +
+      '</div><div class="sl-row">' +
+      cell(ipText(outs), 'IP') + cell(rate(ip ? pit.er * 6 / ip : 0, 2), 'ERA') + cell(rate(ip ? (pit.bb + pit.h) / ip : 0, 2), 'WHIP') +
+      cell(pit.k, 'K') + cell(pit.bb, 'BB') + cell(A.all.strikePct ? Math.round(A.all.strikePct * 100) + '%' : '—', 'STR') +
+      '</div>';
+  }
+
   /* ---------------- hit chart ---------------- */
   function hitChartCard(A) {
     var games = A.games;
@@ -520,7 +591,7 @@ P10.Season = (function () {
       '<div class="card-body"><div class="row gap-12 hc-legend" style="flex-wrap:wrap">' +
       '<span><i class="multi"></i>Multi-hit game</span><span><i class="hit"></i>One hit</span><span><i class="ob"></i>On base, no hit</span>' +
       '<span><i class="out"></i>Did not reach</span><span><i class="kk"></i>2+ strikeouts</span><span><i class="none"></i>Did not bat</span>' +
-      '</div><div class="hint mt-8">Column headers are game numbers, green for wins and red for losses. Hover or tap a cell for the line.</div></div></div>';
+      '</div><div class="hint mt-8">Column headers are game numbers, green for wins and red for losses. Tap a row to open that player; on a computer, hover a cell for the line.</div></div></div>';
   }
 
   /* ---------------- trends ---------------- */

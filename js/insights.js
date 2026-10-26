@@ -183,7 +183,7 @@ P10.Insights = (function () {
     }
     if (pit && pit.ip >= min.ip) {
       if (pit.strike >= C.bench.pitching.strike.good) out.push('Throws strikes');
-      if (pit.era > 0 && pit.era <= C.bench.pitching.era.good) out.push('Keeps runs off the board');
+      if (pit.era <= C.bench.pitching.era.good) out.push('Keeps runs off the board');
       if (pit.kip >= C.bench.pitching.kip.good) out.push('Misses bats');
     }
     if (f && f.tc >= min.tc && f.fpct >= C.bench.fielding.fpct.good) out.push('Reliable glove');
@@ -207,8 +207,12 @@ P10.Insights = (function () {
       pool.sort(function (a, c) { return getter(c) - getter(a); });
       return pool[0];
     }
-    function bottomOf(getter, minVal) {
-      var pool = all.filter(function (x) { var v = getter(x); return v && v > (minVal || 0); });
+    /* Lower-is-better stats: a zero is the best value there is, not a
+       missing one. A pitcher with a 0.00 ERA over a real sample used to be
+       filtered out here and the badge went to the second-best arm. The
+       getter returns null for anyone who does not qualify. */
+    function bottomOf(getter) {
+      var pool = all.filter(function (x) { var v = getter(x); return v !== null && v !== undefined && !isNaN(v); });
       if (pool.length < 3) return null;
       pool.sort(function (a, c) { return getter(a) - getter(c); });
       return pool[0];
@@ -220,7 +224,7 @@ P10.Insights = (function () {
     var obpLeader = topOf(function (x) { return x.bat && x.bat.obp; });
     if (obpLeader === p && obpLeader !== opsLeader) out.push({ label: 'On-Base Leader' });
 
-    var eraLeader = bottomOf(function (x) { return x.pit && x.pit.ip >= C.minSample.ip ? x.pit.era : 0; });
+    var eraLeader = bottomOf(function (x) { return x.pit && x.pit.ip >= C.minSample.ip ? x.pit.era : null; });
     if (eraLeader === p) out.push({ label: 'Lowest ERA' });
 
     var strikeLeader = topOf(function (x) { return x.pit && x.pit.ip >= C.minSample.ip ? x.pit.strike : 0; });
@@ -238,7 +242,7 @@ P10.Insights = (function () {
     }
     if (pit && pit.ip >= C.minSample.ip) {
       if (pit.strike >= C.bench.pitching.strike.elite) out.push({ label: 'Strike Machine' });
-      if (pit.era > 0 && pit.era <= C.bench.pitching.era.elite) out.push({ label: 'Sub-2.00 ERA' });
+      if (pit.era <= C.bench.pitching.era.elite) out.push({ label: 'Sub-2.00 ERA' });
       if (pit.kip >= C.bench.pitching.kip.elite) out.push({ label: 'Swing & Miss Stuff' });
       if (pit.ip >= 15) out.push({ label: 'Innings Eater' });
     }

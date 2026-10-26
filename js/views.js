@@ -915,10 +915,25 @@ P10.Views = (function () {
     set('scheduleBody', html);
   }
 
+  /* A played game's result lives in the game log, not the schedule. Match
+     the two by id first (the published log names games gc-<date>-<n> where
+     n is the schedule id), then by date and opponent for games logged by
+     hand. Two games against the same club on the same day stay distinct
+     because the id match wins. */
+  function loggedResult(g) {
+    var all = P10.GameLog.all();
+    var hit = all.filter(function (x) { return x.id === 'gc-' + g.date + '-' + g.id; })[0] ||
+      all.filter(function (x) { return x.date === g.date && P10.GameLog.sameOpponent(x.opponent, g.opponent); })[0];
+    if (!hit || hit.us === null || hit.them === null) return null;
+    return { us: hit.us, them: hit.them, cls: hit.us > hit.them ? 'win' : hit.us < hit.them ? 'loss' : 'tie',
+      word: hit.us > hit.them ? 'W' : hit.us < hit.them ? 'L' : 'T', game: hit };
+  }
+
   function gameCard(g, wx, isNext, st, isPast) {
     var f = !isPast ? Sch.forecastFor(g.date, wx) : null;
     var play = Sch.playability(f);
     var strength = Sch.strengthOf(g.id !== undefined ? g.id : g.idx);
+    var res = isPast ? loggedResult(g) : null;
 
     return '<div class="game' + (isNext ? ' next' : '') + '" data-game="' + (g.id !== undefined ? g.id : g.idx) + '">' +
       '<div class="game-head">' +
@@ -936,6 +951,7 @@ P10.Views = (function () {
           (f ? '<div class="game-wx"><span class="wxi">' + Sch.wxIcon(f.code) + '</span>' +
             '<span class="num">' + f.hi + '°</span>' +
             '<span class="wxt text-dimmer">' + f.pop + '%</span></div>' : '') +
+          (res ? '<span class="rslt ' + res.cls + '">' + res.word + ' ' + res.us + '\u2013' + res.them + '</span>' : '') +
           '<span class="game-caret">▼</span>' +
         '</div>' +
       '</div>' +
@@ -948,6 +964,18 @@ P10.Views = (function () {
   }
 
   function parentGamePanel(g, st) {
+    var res = loggedResult(g);
+    if (res) {
+      var arms = (res.game.pitchers || []).filter(function (p) { return p.name; });
+      return '<div class="hint">' +
+        (res.cls === 'win' ? 'Won ' : res.cls === 'loss' ? 'Lost ' : 'Tied ') + res.us + '-' + res.them +
+        (g.away ? ' on the road' : ' at home') + (g.location ? ' at ' + esc(g.location) : '') + '.' +
+        (arms.length ? ' Pitched: ' + arms.map(function (a) {
+          return esc(a.name) + ' (' + S.ipText(Number(a.ip) || 0) + ' IP' + (a.k ? ', ' + a.k + ' K' : '') + ')';
+        }).join(', ') + '.' : '') +
+        ' The full box score is on the Season tab.</div>' +
+        '<button class="btn btn-ghost btn-block mt-8" data-goto="season">Open Season Review</button>';
+    }
     return '<div class="hint">' +
       (g.away ? 'Away game' : 'Home game') +
       (g.location ? ' at ' + esc(g.location) : '') +

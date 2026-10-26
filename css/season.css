@@ -10,7 +10,8 @@
 @media (max-width: 600px) { .season-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ---- game rows ---- */
-.season-games { max-height: 520px; overflow-y: auto; }
+/* All sixteen rows show; an inner scroll box inside a page that already scrolls is a trap on a phone. */
+.season-games { }
 .sg { border-bottom: 1px solid var(--line-soft); }
 .sg:last-child { border-bottom: none; }
 .sg-head {
@@ -121,3 +122,46 @@ table.stat.posgrid { min-width: 0; }
   .sg-head { padding: 13px 16px; }
   .hitchart td.hc-c span { width: 26px; height: 26px; line-height: 26px; }
 }
+
+/* ---- head to head / weekends ---- */
+.h2h { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line-soft); }
+.h2h:last-child { border-bottom: none; }
+.h2h-name { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: 13.5px; display: flex; flex-direction: column; }
+.h2h-name i { font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+.h2h-dots { display: flex; gap: 4px; flex-shrink: 0; }
+.rdot {
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px;
+  font-style: normal; font-family: var(--f-display); font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  background: var(--surface-3); color: var(--text-3); border: 1px solid var(--line);
+}
+.rdot.win  { background: var(--good-bg); color: var(--good); border-color: rgba(61,220,145,.35); }
+.rdot.loss { background: var(--bad-bg);  color: var(--bad);  border-color: rgba(255,107,107,.35); }
+.h2h-rec { font-family: var(--f-num); font-size: 14px; font-weight: 600; flex-shrink: 0; min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* The leaders switch on the dashboard has five buttons, which is wider than
+   a phone when each one is a thumb-sized target. Let the card head wrap and
+   the switch scroll sideways instead of poking out of the card. */
+@media (max-width: 600px) {
+  .card-head { flex-wrap: wrap; }
+  .card-head .seg { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .card-head .seg::-webkit-scrollbar { display: none; }
+  .card-head .seg .seg-btn { white-space: nowrap; flex-shrink: 0; }
+}
+
+/* The record is the first thing a parent looks for. The tiles carry OPS and
+   ERA but not wins and losses, so bring the hero numbers back on a phone in
+   a compact row. */
+@media (max-width: 720px) {
+  .hero-inner { flex-wrap: wrap !important; }
+  .hero-record { display: flex !important; width: 100%; justify-content: flex-start; gap: 26px; padding: 10px 0 0; margin-top: 8px; border-top: 1px solid var(--line-soft); border-left: none; }
+  .hrec { min-width: 0; text-align: left; }
+  .hrec-val { font-size: 24px; }
+}
+
+/* ---- season line ---- */
+.sl-row { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
+.sl { display: flex; flex-direction: column; min-width: 40px; }
+.sl b { font-family: var(--f-num); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.sl i { font-style: normal; font-family: var(--f-display); font-size: 10px; letter-spacing: .12em; color: var(--text-3); }
+
+.grid.g-top { align-items: start; }
