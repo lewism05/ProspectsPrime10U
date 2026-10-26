@@ -111,14 +111,15 @@ P10.Visits = (function () {
       '<div class="card-body">' + inner + '</div></div>';
   }
 
+  /* Before the code is entered the page gives nothing away: no title, no
+     numbers, just a code box. */
   function codeForm(msg) {
-    return cardShell(
-      '<div class="hint mb-8">Enter the admin code to see who has been opening the app and how often.</div>' +
+    return '<div class="card mb-16" id="visitsCard"><div class="card-body">' +
       (msg ? '<div class="msg msg-bad mb-8">' + esc(msg) + '</div>' : '') +
       '<div class="row gap-8" style="flex-wrap:wrap">' +
       '<input class="input" type="password" id="adminCodeInput" placeholder="Admin code" autocomplete="off" style="max-width:220px">' +
-      '<button class="btn btn-primary" id="adminCodeGo">Show Traffic</button>' +
-      '</div>');
+      '<button class="btn btn-primary" id="adminCodeGo">Continue</button>' +
+      '</div></div></div>';
   }
 
   function renderSummary(s, days) {
@@ -208,7 +209,7 @@ P10.Visits = (function () {
     var host = document.getElementById('visitsHost');
     if (!host) return;
     days = days || lastDays;
-    host.innerHTML = cardShell('<div class="hint">Loading…</div>');
+    host.innerHTML = ss(KEY_ADMIN) ? cardShell('<div class="hint">Loading…</div>') : codeForm('');
     load(days).then(function (s) {
       lastSummary = s; lastDays = days;
       host.innerHTML = renderSummary(s, days);
@@ -381,7 +382,7 @@ P10.Visits = (function () {
     if (nt) { nt.classList.remove('open'); nt.setAttribute('aria-expanded', 'false'); }
     if (P10.Charts && P10.Charts.destroyAll) P10.Charts.destroyAll();
     var body = document.getElementById('adminBody');
-    if (body) body.innerHTML = '<div class="section-head"><div><h2>Admin</h2><div class="section-sub">Site traffic · who is using the app and how often</div></div></div><div id="visitsHost"></div>';
+    if (body) body.innerHTML = '<div class="section-head"><div><h2>Admin</h2></div></div><div id="visitsHost"></div>';
     try { sessionStorage.removeItem(KEY_ADMIN); } catch (e) {}
     mount(lastDays);
     window.scrollTo({ top: 0, behavior: 'smooth' });
