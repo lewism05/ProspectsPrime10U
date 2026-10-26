@@ -100,6 +100,7 @@
       <button class="navtab" data-tab="pitching" data-room="dugout">Pitching</button>
       <button class="navtab" data-tab="defense" data-room="dugout">Defense</button>
       <button class="navtab" data-tab="schedule" data-room="dugout">Schedule</button>
+      <button class="navtab" data-tab="profile" data-room="dugout">Profile</button>
 
       <button class="navtab" data-tab="development" data-room="corner">Practice</button>
       <button class="navtab" data-tab="lineup" data-room="corner">Lineup</button>
@@ -151,6 +152,16 @@
       <!-- ==================== SEASON REVIEW ==================== -->
       <section class="page" id="page-season">
         <div id="seasonBody"></div>
+      </section>
+
+      <!-- ==================== PROFILE ==================== -->
+      <section class="page" id="page-profile">
+        <div id="profileBody"></div>
+      </section>
+
+      <!-- ==================== ADMIN (site traffic) ==================== -->
+      <section class="page" id="page-admin">
+        <div id="adminBody"></div>
       </section>
 
       <!-- ==================== MY PLAYER ==================== -->
@@ -219,7 +230,11 @@
         <img id="footMark" src="assets/mark.png" alt="">
         <span>Prospects Prime 10U Baseball · <span id="footSeason">2026</span></span>
       </div>
-      <div id="footMeta"></div>
+      <div class="foot-right">
+        <span id="footMeta"></span>
+        <span id="footWho" class="foot-who"></span>
+        <a href="#admin" class="foot-admin" data-goto="admin">Admin</a>
+      </div>
     </div>
   </footer>
 

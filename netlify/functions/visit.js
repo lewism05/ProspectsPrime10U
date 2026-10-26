@@ -9,6 +9,8 @@
      t       when
      did     a random id the browser made for itself, so one phone counts
              as one phone across days (it is not tied to a person)
+     name    what the visitor typed in the "who's on this phone" box, if
+             they filled it in - this is how a visit maps to a person
      player  the player chosen on the My Player tab, if any - this is how
              a visit maps to a family
      coach   whether coach mode was on
@@ -70,6 +72,8 @@ async function record(store, body) {
   list.push({
     t: new Date().toISOString(),
     did,
+    name: clean(p.name, 40),
+    role: clean(p.role, 16),
     player: clean(p.player, 40),
     coach: !!p.coach,
     phone: !!p.phone
@@ -82,6 +86,7 @@ async function summary(store, days) {
   const keys = daysBack(days);
   const perDay = [];
   const byPlayer = {};
+  const byPerson = {};
   const byDevice = {};
   let total = 0, phone = 0, coach = 0;
 
@@ -89,15 +94,20 @@ async function summary(store, days) {
     const list = (await store.get('d/' + day, { type: 'json' })) || [];
     const devices = new Set();
     list.forEach((v) => {
+      const who = v.name || '(no name entered)';
+      const pe = byPerson[who] || (byPerson[who] = { visits: 0, devices: new Set(), days: new Set(), last: v.t, players: new Set(), role: '' });
+      if (v.role) pe.role = v.role;
+      pe.visits++; pe.devices.add(v.did); pe.days.add(day); if (v.player) pe.players.add(v.player); if (v.t > pe.last) pe.last = v.t;
       total++;
       if (v.phone) phone++;
       if (v.coach) coach++;
       devices.add(v.did);
-      const d = byDevice[v.did] || (byDevice[v.did] = { visits: 0, first: v.t, last: v.t, player: '', coach: false, phone: !!v.phone, days: new Set() });
+      const d = byDevice[v.did] || (byDevice[v.did] = { visits: 0, first: v.t, last: v.t, player: '', name: '', coach: false, phone: !!v.phone, days: new Set() });
       d.visits++;
       if (v.t < d.first) d.first = v.t;
       if (v.t > d.last) d.last = v.t;
       if (v.player) d.player = v.player;
+      if (v.name) d.name = v.name;
       if (v.coach) d.coach = true;
       d.days.add(day);
       const name = v.player || (v.coach ? '(coach, no player picked)' : '(no player picked)');
@@ -116,15 +126,20 @@ async function summary(store, days) {
     days: byPlayer[name].days.size, last: byPlayer[name].last
   })).sort((a, b) => b.visits - a.visits);
 
+  const people = Object.keys(byPerson).map((name) => ({
+    name, visits: byPerson[name].visits, devices: byPerson[name].devices.size, days: byPerson[name].days.size,
+    last: byPerson[name].last, role: byPerson[name].role, players: Array.from(byPerson[name].players).join(', ')
+  })).sort((a, b) => b.visits - a.visits);
+
   const devices = Object.keys(byDevice).map((id) => ({
-    id: id.slice(0, 6), visits: byDevice[id].visits, days: byDevice[id].days.size, player: byDevice[id].player,
+    id: id.slice(0, 6), visits: byDevice[id].visits, days: byDevice[id].days.size, player: byDevice[id].player, name: byDevice[id].name || '',
     coach: byDevice[id].coach, phone: byDevice[id].phone, first: byDevice[id].first, last: byDevice[id].last
   })).sort((a, b) => b.last.localeCompare(a.last));
 
   return {
     days, total, uniqueDevices: devices.length, phone, coach,
     today: perDay.length ? perDay[perDay.length - 1].visits : 0,
-    perDay, players, devices
+    perDay, people, players, devices
   };
 }
 

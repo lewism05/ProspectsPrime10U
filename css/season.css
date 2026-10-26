@@ -169,3 +169,13 @@ table.stat.posgrid { min-width: 0; }
 /* ---- site traffic (admin) ---- */
 .visits-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 720px) { .visits-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- footer admin link: present, quiet ---- */
+.foot-right { display: flex; align-items: center; gap: 14px; }
+.foot-admin { color: var(--text-3); font-size: 11.5px; text-decoration: none; opacity: .7; }
+.foot-admin:hover, .foot-admin:focus-visible { color: var(--text); opacity: 1; text-decoration: underline; }
+.foot-who { color: var(--text-3); font-size: 11.5px; }
+.foot-who a { color: var(--text-2); }
+#whoCard .card-title { font-size: 15px; }
+#profRole { flex-wrap: wrap; }
+#profRole .seg-btn { flex: 1 1 auto; }
