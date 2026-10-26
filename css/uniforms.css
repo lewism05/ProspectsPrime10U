@@ -1,0 +1,172 @@
+/* ==========================================================================
+   PROSPECTS PRIME 10U - UNIFORMS
+   Home, Away and Alt replace the old dark / light switch. All three sit on
+   the clean light layout (data-theme="light" stays on), and only the team
+   colours change, matching the three jerseys:
+
+     HOME  red jersey      white app, solid red masthead with a black edge
+     AWAY  white and blue  white app, blue accents
+     ALT   green camo      white app, digital camo masthead, forest green
+
+   The attribute that picks one is data-uniform on <html>, set before first
+   paint by the inline script in index.html and by applyTheme() in app.js.
+   Every rule carries [data-theme] as well so it outranks the light-theme
+   rules in base.css and components.css regardless of load order.
+
+   --chart-a / --chart-a-dim are the neutral "team" series colour for charts.
+   They are kept apart from --chrome on purpose: a red accent is fine for a
+   button, but a red bar on a chart reads as "bad".
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- HOME --- */
+:root[data-theme][data-uniform="home"] {
+  --bg: #F5F5F7;
+  --bg-grad: radial-gradient(1100px 640px at 50% -14%, #FFFFFF 0%, #F7ECEE 46%, #F5F5F7 72%);
+  --surface: #FFFFFF; --surface-2: #F8F8FA; --surface-3: #F1F1F4; --surface-hi: #E6E6EB;
+  --line: #E5E5EA; --line-soft: #EFEFF3; --line-strong: #C9C9D1;
+  --text: #16161C; --text-2: #4A4A55; --text-3: #73737F;
+  --chrome: #C8102E; --chrome-dim: #D9727F;
+  --chrome-grad: linear-gradient(120deg, #C8102E 0%, #A50D25 48%, #1C1C22 100%);
+  --chrome-line: linear-gradient(90deg, transparent, #C8102E 22%, #16161C 60%, transparent);
+  --violet: #C8102E; --cyan: #2B2B33; --info: #2B2B33; --info-bg: rgba(43,43,51,.08);
+  --tier-2: #2B2B33; --tier-3: #C8102E;
+  /* Losses go a shade deeper and cooler than the jersey red, so a result
+     never reads as decoration. */
+  --bad: #9E1239; --bad-bg: rgba(158,18,57,.08); --bad-dim: #EDB3C2;
+  --chart-a: #2B2B33; --chart-a-dim: #8A8A95;
+  --uni-mast: #C8102E;
+}
+:root[data-theme][data-uniform="home"] .topnav {
+  background: #C8102E;
+  border-bottom: 3px solid #16161C;
+  --text: #FFFFFF; --text-2: #FFE3E6; --text-3: #F6B9C0;
+  --line: rgba(255,255,255,.28); --line-soft: rgba(255,255,255,.18); --line-strong: rgba(255,255,255,.5);
+  --surface: #A80D26; --surface-2: #B30E28; --surface-3: #9A0B22; --surface-hi: #8C0A1F;
+  --chrome: #FFFFFF; --chrome-grad: linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 100%);
+  --text-inverse: #C8102E;
+}
+:root[data-theme][data-uniform="home"] .hero {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F6F6F8 60%, rgba(245,245,247,0) 100%);
+}
+:root[data-theme][data-uniform="home"] .hero::before {
+  background-image: repeating-linear-gradient(115deg, rgba(200,16,46,.045) 0 1px, transparent 1px 6px);
+}
+
+/* ---------------------------------------------------------------- AWAY --- */
+:root[data-theme][data-uniform="away"] {
+  --bg: #F4F6FB;
+  --bg-grad: radial-gradient(1100px 640px at 50% -14%, #FFFFFF 0%, #E8F0FB 46%, #F4F6FB 72%);
+  --surface: #FFFFFF; --surface-2: #F6F8FD; --surface-3: #ECF2FA; --surface-hi: #DEE8F6;
+  --line: #E2E8F2; --line-soft: #ECF0F7; --line-strong: #C2D0E6;
+  --text: #111A2C; --text-2: #46536C; --text-3: #6F7D96;
+  --chrome: #1B5EC6; --chrome-dim: #6E93D2;
+  --chrome-grad: linear-gradient(120deg, #1B5EC6 0%, #2F7BE0 42%, #74B6F4 100%);
+  --chrome-line: linear-gradient(90deg, transparent, #1B5EC6 20%, #2F7BE0 52%, #FFFFFF 78%, transparent);
+  --violet: #1B5EC6; --cyan: #2F7BE0; --info: #1B5EC6; --info-bg: rgba(27,94,198,.10);
+  --tier-2: #0F7590; --tier-3: #1B5EC6;
+  --chart-a: #1B5EC6; --chart-a-dim: #6E93D2;
+  --uni-mast: #FFFFFF;
+}
+:root[data-theme][data-uniform="away"] .topnav { background: rgba(255,255,255,.92); }
+:root[data-theme][data-uniform="away"] .hero {
+  background: linear-gradient(180deg, #FFFFFF 0%, #EAF2FC 48%, rgba(244,246,251,0) 100%);
+}
+:root[data-theme][data-uniform="away"] .hero::before {
+  background-image: repeating-linear-gradient(115deg, rgba(27,94,198,.06) 0 1px, transparent 1px 6px);
+}
+
+/* ----------------------------------------------------------------- ALT --- */
+:root[data-theme][data-uniform="alt"] {
+  --bg: #F4F6F2;
+  --bg-grad: radial-gradient(1100px 640px at 50% -14%, #FFFFFF 0%, #EDF2E8 46%, #F4F6F2 72%);
+  --surface: #FFFFFF; --surface-2: #F7F9F5; --surface-3: #EEF2EA; --surface-hi: #E1E8DA;
+  --line: #E1E6DC; --line-soft: #ECEFE8; --line-strong: #C3CDB9;
+  --text: #151A12; --text-2: #465040; --text-3: #6E7868;
+  --chrome: #2F5A1E; --chrome-dim: #7F9A6E;
+  --chrome-grad: linear-gradient(120deg, #3E6B26 0%, #2F5A1E 45%, #1C2416 100%);
+  --chrome-line: linear-gradient(90deg, transparent, #3E6B26 22%, #151A12 60%, transparent);
+  --violet: #2F5A1E; --cyan: #24301C; --info: #24301C; --info-bg: rgba(36,48,28,.08);
+  --tier-2: #24301C; --tier-3: #2F5A1E;
+  --chart-a: #3A4234; --chart-a-dim: #8A9580;
+  --uni-mast: #1F2A18;
+}
+:root[data-theme][data-uniform="alt"] .topnav {
+  background: #1F2A18 url(../assets/camo-dark.png) repeat;
+  background-size: 216px 216px;
+  border-bottom: 3px solid #0E120B;
+  --text: #FFFFFF; --text-2: #E2E8DC; --text-3: #B9C3AF;
+  --line: rgba(255,255,255,.22); --line-soft: rgba(255,255,255,.14); --line-strong: rgba(255,255,255,.45);
+  --surface: rgba(14,18,11,.6); --surface-2: rgba(14,18,11,.7); --surface-3: rgba(14,18,11,.7); --surface-hi: rgba(14,18,11,.8);
+  --chrome: #FFFFFF; --chrome-grad: linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 100%);
+  --text-inverse: #1F2A18;
+}
+:root[data-theme][data-uniform="alt"] .topnav .brand-name,
+:root[data-theme][data-uniform="alt"] .topnav .brand-sub { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+:root[data-theme][data-uniform="alt"] .hero {
+  background: #FFFFFF url(../assets/camo-light.png) repeat;
+  background-size: 216px 216px;
+}
+:root[data-theme][data-uniform="alt"] .hero::before {
+  background-image: linear-gradient(180deg, rgba(255,255,255,0) 40%, rgba(244,246,242,.9) 100%);
+}
+
+/* ------------------------------------------------- shared by all three --- */
+/* Red and camo mastheads are solid, so the wordmark goes plain white. The
+   gradient-clipped text would otherwise blend into the bar. */
+:root[data-theme][data-uniform="home"] .topnav .brand-name,
+:root[data-theme][data-uniform="alt"] .topnav .brand-name {
+  background: none; -webkit-text-fill-color: #FFFFFF; color: #FFFFFF;
+}
+:root[data-theme][data-uniform="home"] .topnav,
+:root[data-theme][data-uniform="alt"] .topnav { backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-theme][data-uniform="home"] .topnav::after,
+:root[data-theme][data-uniform="alt"] .topnav::after { display: none; }
+:root[data-theme][data-uniform] .subnav { background: rgba(255,255,255,.94); }
+:root[data-theme][data-uniform] .foot { background: transparent; }
+/* Status bits in a solid masthead: the coach chip goes white with team
+   text, and the live dot gets the bright green it was drawn with. */
+:root[data-theme][data-uniform="home"] .topnav .coach-chip,
+:root[data-theme][data-uniform="alt"] .topnav .coach-chip {
+  background: #FFFFFF; border-color: #FFFFFF; color: var(--text-inverse);
+}
+:root[data-theme][data-uniform="home"] .topnav .live-dot,
+:root[data-theme][data-uniform="alt"] .topnav .live-dot { background: #3DDC91; box-shadow: 0 0 0 3px rgba(61,220,145,.25); }
+:root[data-theme][data-uniform="home"] .topnav .live-dot.stale,
+:root[data-theme][data-uniform="alt"] .topnav .live-dot.stale { background: #FFC24B; box-shadow: 0 0 0 3px rgba(255,194,75,.25); }
+:root[data-theme][data-uniform="home"] .topnav .live-dot.off,
+:root[data-theme][data-uniform="alt"] .topnav .live-dot.off { background: rgba(255,255,255,.55); box-shadow: none; }
+::selection { background: color-mix(in srgb, var(--chrome) 22%, transparent); color: inherit; }
+
+/* Season page bits that had a blue baked in. */
+:root[data-theme][data-uniform] .arm-dot i {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--chart-a) 80%, transparent), color-mix(in srgb, var(--chart-a) 40%, transparent));
+}
+:root[data-theme][data-uniform] .posgrid td.pg-c.on {
+  background: color-mix(in srgb, var(--chart-a) calc(var(--a) * 30%), transparent);
+}
+:root[data-theme][data-uniform] .hitchart td.hc-c.ob span,
+:root[data-theme][data-uniform] .hc-legend i.ob { border-color: color-mix(in srgb, var(--info) 35%, transparent); }
+
+/* ------------------------------------------------------ the switch --- */
+/* One button, three labels. On a wide screen all three show with the
+   current one lit and a tap on any label picks it; on a phone only the
+   current one shows and a tap moves to the next. */
+#themeBtn.uni-btn {
+  width: auto; padding: 0 10px; gap: 0;
+  font-family: var(--f-display); font-size: 13px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+}
+#themeBtn.uni-btn span { opacity: .5; transition: opacity .15s; padding: 2px 0; }
+#themeBtn.uni-btn span + span::before { content: '\00B7'; margin: 0 6px; opacity: .6; display: inline-block; }
+#themeBtn.uni-btn span:hover { opacity: .85; }
+:root[data-uniform="home"] #themeBtn.uni-btn [data-u="home"],
+:root[data-uniform="away"] #themeBtn.uni-btn [data-u="away"],
+:root[data-uniform="alt"]  #themeBtn.uni-btn [data-u="alt"] { opacity: 1; font-weight: 700; }
+@media (max-width: 600px) {
+  #themeBtn.uni-btn { padding: 0 9px; min-width: 52px; justify-content: center; }
+  #themeBtn.uni-btn span { display: none; }
+  #themeBtn.uni-btn span + span::before { display: none; }
+  :root[data-uniform="home"] #themeBtn.uni-btn [data-u="home"],
+  :root[data-uniform="away"] #themeBtn.uni-btn [data-u="away"],
+  :root[data-uniform="alt"]  #themeBtn.uni-btn [data-u="alt"] { display: inline; }
+}
