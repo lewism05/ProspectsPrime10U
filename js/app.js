@@ -173,33 +173,45 @@
 
 
   /* ==================================================================
-     THEME
-     Applied before first paint (see the inline script in index.html) so
-     a light-theme reader never gets a dark flash on load.
+     UNIFORM (the theme)
+     Home, Away and Alt, matching the three jerseys. All three use the
+     light layout; css/uniforms.css swaps the team colours. Applied before
+     first paint by the inline script in index.html, so there is no flash.
      ================================================================== */
-  var THEME_KEY = C.ns + '_theme';
+  var UNI_KEY = C.ns + '_uniform';
+  var UNIFORMS = ['home', 'away', 'alt'];
+  var UNI_NAME = { home: 'Home', away: 'Away', alt: 'Alt' };
+  var UNI_BAR = { home: '#C8102E', away: '#FFFFFF', alt: '#1F2A18' };
 
   function currentTheme() {
-    try { return localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) { return 'dark'; }
+    var u = 'home';
+    try { u = localStorage.getItem(UNI_KEY) || 'home'; } catch (e) {}
+    return UNIFORMS.indexOf(u) >= 0 ? u : 'home';
   }
 
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+  function applyTheme(uni) {
+    if (UNIFORMS.indexOf(uni) < 0) uni = 'home';
+    var root = document.documentElement;
+    root.setAttribute('data-theme', 'light');
+    root.setAttribute('data-uniform', uni);
+    try { localStorage.setItem(UNI_KEY, uni); } catch (e) {}
 
-    // The mark has enough black in it to vanish on paper, so each theme
-    // gets the artwork drawn for it.
-    var light = theme === 'light';
+    // Every uniform is on paper, so the mark drawn for paper is used.
     var bm = $('brandMark'), hl = $('heroLogo'), fm = $('footMark');
-    if (bm) bm.src = light ? 'assets/mark-light.png' : 'assets/mark.png';
-    if (hl) hl.src = light ? 'assets/mark-light.png' : 'assets/logo.png';
-    if (fm) fm.src = light ? 'assets/mark-light.png' : 'assets/mark.png';
+    if (bm) bm.src = 'assets/mark-light.png';
+    if (hl) hl.src = 'assets/mark-light.png';
+    if (fm) fm.src = 'assets/mark-light.png';
 
+    // The phone's status bar picks up the masthead colour.
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', light ? '#F1F3F6' : '#07090C');
+    if (meta) meta.setAttribute('content', UNI_BAR[uni]);
 
     var btn = $('themeBtn');
-    if (btn) btn.title = light ? 'Switch to dark' : 'Switch to light';
+    if (btn) {
+      var next = UNIFORMS[(UNIFORMS.indexOf(uni) + 1) % UNIFORMS.length];
+      btn.title = UNI_NAME[uni] + ' uniform - tap for ' + UNI_NAME[next];
+      btn.setAttribute('aria-label', 'Uniform: ' + UNI_NAME[uni] + '. Switch to ' + UNI_NAME[next]);
+    }
 
     // Charts hold their palette in JS, so they have to be told and redrawn.
     if (P10.Charts.refreshTheme) P10.Charts.refreshTheme();
@@ -208,8 +220,13 @@
 
   var themeBtn = $('themeBtn');
   if (themeBtn) {
-    themeBtn.addEventListener('click', function () {
-      applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+    themeBtn.addEventListener('click', function (e) {
+      var cur = currentTheme();
+      // On a wide screen all three labels show; a tap on one picks it.
+      var pick = e.target && e.target.closest ? e.target.closest('[data-u]') : null;
+      var u = pick && pick.getAttribute('data-u');
+      if (!u || u === cur) u = UNIFORMS[(UNIFORMS.indexOf(cur) + 1) % UNIFORMS.length];
+      applyTheme(u);
     });
   }
 

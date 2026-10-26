@@ -38,10 +38,19 @@ P10.Charts = (function () {
     } catch (e) { return fallback; }
   }
 
+  function hexA(hex, a) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+    if (!m) return hex;
+    var n = parseInt(m[1], 16);
+    return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+  }
+
   function refreshTheme() {
     var light = document.documentElement.getAttribute('data-theme') === 'light';
-    COLOR.chrome  = readVar('--chrome', COLOR.chrome);
-    COLOR.chromeD = readVar('--chrome-dim', COLOR.chromeD);
+    // The team series colour is kept apart from the accent: a red accent
+    // is right for a button, but a red bar on a chart reads as "bad".
+    COLOR.chrome  = readVar('--chart-a', readVar('--chrome', COLOR.chrome));
+    COLOR.chromeD = readVar('--chart-a-dim', readVar('--chrome-dim', COLOR.chromeD));
     COLOR.good    = readVar('--good', COLOR.good);
     COLOR.warn    = readVar('--warn', COLOR.warn);
     COLOR.bad     = readVar('--bad', COLOR.bad);
@@ -54,7 +63,8 @@ P10.Charts = (function () {
     COLOR.tipText = readVar('--text', light ? '#101620' : '#F4F7FA');
     COLOR.point   = readVar('--surface', light ? '#FFFFFF' : '#0E1218');
     // Series fills were mixed for a black ground; on paper a pale bar is no bar.
-    COLOR.barA     = light ? 'rgba(22,103,168,.78)'  : 'rgba(87,182,255,.72)';
+    COLOR.barA     = readVar('--chart-a', '') ? hexA(readVar('--chart-a', ''), .8)
+                   : (light ? 'rgba(22,103,168,.78)' : 'rgba(87,182,255,.72)');
     COLOR.barB     = light ? 'rgba(100,112,127,.55)' : 'rgba(201,207,214,.72)';
     COLOR.fillSoft = light ? 'rgba(16,22,32,.06)'    : 'rgba(201,207,214,.10)';
     COLOR.fillUp   = light ? 'rgba(27,122,71,.12)'   : 'rgba(61,220,145,.12)';
