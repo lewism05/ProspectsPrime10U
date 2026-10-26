@@ -28,7 +28,7 @@
    time), in a blob store named "visits".
    ========================================================================== */
 
-const { getStore } = require('@netlify/blobs');
+const { getStore, connectLambda } = require('@netlify/blobs');
 
 const STORE = 'visits';
 const MAX_PER_DAY = 5000;
@@ -147,6 +147,11 @@ exports.handler = async function (event) {
   const adminCode = process.env.ADMIN_CODE;
   let store;
   try {
+    /* Functions written in this handler style do not get the Blobs
+       connection handed to them automatically; this reads it off the
+       request. Without it the store call fails with "environment has
+       not been configured to use Netlify Blobs". */
+    connectLambda(event);
     store = getStore({ name: STORE, consistency: 'strong' });
   } catch (e) {
     return reply(503, { error: 'Storage is not available on this site.', detail: String(e.message || e) });
