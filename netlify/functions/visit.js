@@ -24,14 +24,14 @@
                   it exists, and only a browser holding the code can read
                   it. The coach passcode in config.js does NOT open this.
 
-   Storage: one JSON array per day under the key d/YYYY-MM-DD (Central
-   time), in a blob store named "visits".
+   Storage: one entry per visit in a blob store named "visits", keyed
+   v/<day in Central time>/<time>/<random>/<details>. The details ride in
+   the key so a summary is a single list call.
    ========================================================================== */
 
 const { getStore, connectLambda } = require('@netlify/blobs');
 
 const STORE = 'visits';
-const MAX_PER_DAY = 5000;
 const TZ = 'America/Chicago';
 
 function reply(status, body) {
@@ -61,29 +61,56 @@ function clean(s, max) {
   return String(s || '').replace(/[^\w .'\-]/g, '').slice(0, max);
 }
 
+/* Each visit is its own entry, and everything about it is encoded in the
+   key, so a summary needs one list call and no reads. There is no shared
+   file for two visitors to overwrite, which matters because the default
+   consistency mode can serve a slightly stale read. */
+function encode(obj) {
+  return Buffer.from(JSON.stringify(obj)).toString('base64url');
+}
+function decode(str) {
+  try { return JSON.parse(Buffer.from(str, 'base64url').toString()); } catch (e) { return null; }
+}
+
 async function record(store, body) {
   let p;
   try { p = JSON.parse(body || '{}'); } catch (e) { return reply(400, { error: 'bad json' }); }
   const did = clean(p.did, 24);
   if (!did) return reply(400, { error: 'no device id' });
-  const key = 'd/' + dayKey(new Date());
-  const list = (await store.get(key, { type: 'json' })) || [];
-  if (list.length >= MAX_PER_DAY) return reply(200, { ok: true, capped: true });
-  list.push({
-    t: new Date().toISOString(),
+  const now = new Date();
+  const meta = {
     did,
     name: clean(p.name, 40),
     role: clean(p.role, 16),
     player: clean(p.player, 40),
     coach: !!p.coach,
     phone: !!p.phone
-  });
-  await store.setJSON(key, list);
+  };
+  const key = 'v/' + dayKey(now) + '/' + now.toISOString() + '/' + Math.random().toString(36).slice(2, 6) + '/' + encode(meta);
+  await store.set(key, '1');
   return reply(200, { ok: true });
+}
+
+async function listVisits(store, days) {
+  const wanted = new Set(daysBack(days));
+  const out = [];
+  const { blobs } = await store.list({ prefix: 'v/' });
+  (blobs || []).forEach((b) => {
+    const parts = String(b.key).split('/');
+    if (parts.length < 5 || !wanted.has(parts[1])) return;
+    const meta = decode(parts.slice(4).join('/'));
+    if (!meta) return;
+    out.push(Object.assign({ day: parts[1], t: parts[2] }, meta));
+  });
+  return out;
 }
 
 async function summary(store, days) {
   const keys = daysBack(days);
+  const visits = await listVisits(store, days);
+  const byDay = {};
+  visits.forEach((v) => { (byDay[v.day] = byDay[v.day] || []).push(v); });
+
   const perDay = [];
   const byPlayer = {};
   const byPerson = {};
@@ -91,7 +118,7 @@ async function summary(store, days) {
   let total = 0, phone = 0, coach = 0;
 
   for (const day of keys) {
-    const list = (await store.get('d/' + day, { type: 'json' })) || [];
+    const list = byDay[day] || [];
     const devices = new Set();
     list.forEach((v) => {
       const who = v.name || '(no name entered)';
@@ -152,7 +179,7 @@ exports.handler = async function (event) {
        request. Without it the store call fails with "environment has
        not been configured to use Netlify Blobs". */
     connectLambda(event);
-    store = getStore({ name: STORE, consistency: 'strong' });
+    store = getStore(STORE);
   } catch (e) {
     return reply(503, { error: 'Storage is not available on this site.', detail: String(e.message || e) });
   }
