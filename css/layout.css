@@ -487,3 +487,25 @@
   .rooms { width: 100%; }
   .room-btn { flex: 1; justify-content: center; padding: 8px 6px; font-size: 12px; }
 }
+
+/* ==========================================================================
+   SAFE AREAS - the app opened from the home screen
+   Launched from an iPhone home screen the page runs full screen with a
+   see-through status bar (black-translucent), so the top 47-59px sit
+   under the clock and battery. --safe-top is 0 in a normal browser tab,
+   so none of this changes anything there.
+   ========================================================================== */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-h: calc(58px + var(--safe-top));
+}
+.topnav { padding-top: var(--safe-top); }
+html { scroll-padding-top: calc(var(--nav-h) + 16px); }
+
+/* The full-screen player drawer and pop-ups start below the status bar. */
+/* :root in front because components.css loads after this file. */
+:root .drawer-head { padding-top: calc(20px + var(--safe-top)); }
+:root .drawer-close { top: calc(14px + var(--safe-top)); }
+:root .drawer-body { padding-bottom: calc(40px + var(--safe-bottom)); }
+:root .modal-scrim { padding-top: calc(20px + var(--safe-top)); padding-bottom: calc(20px + var(--safe-bottom)); }

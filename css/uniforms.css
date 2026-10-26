@@ -67,7 +67,12 @@
   --chart-a: #1B5EC6; --chart-a-dim: #6E93D2;
   --uni-mast: #FFFFFF;
 }
-:root[data-theme][data-uniform="away"] .topnav { background: rgba(255,255,255,.92); }
+/* The Away masthead is white, and the home-screen app's status bar text is
+   white, so the strip behind the clock and battery is painted Away blue.
+   In a browser tab --safe-top is 0 and the strip does not exist. */
+:root[data-theme][data-uniform="away"] .topnav {
+  background: linear-gradient(#1B5EC6, #1B5EC6) top / 100% var(--safe-top, 0px) no-repeat, rgba(255,255,255,.92);
+}
 :root[data-theme][data-uniform="away"] .hero {
   background: linear-gradient(180deg, #FFFFFF 0%, #EAF2FC 48%, rgba(244,246,251,0) 100%);
 }
