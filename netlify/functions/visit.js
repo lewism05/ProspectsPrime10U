@@ -108,6 +108,20 @@ async function listVisits(store, days) {
 async function summary(store, days) {
   const keys = daysBack(days);
   const visits = await listVisits(store, days);
+
+  /* A phone's first visit usually lands before the person types a name.
+     Once that phone has a name on any visit, every visit from it counts
+     under that name, so nobody shows up twice. */
+  const didName = {}, didPlayer = {};
+  visits.slice().sort((a, b) => a.t.localeCompare(b.t)).forEach((v) => {
+    if (v.name) didName[v.did] = v.name;
+    if (v.player) didPlayer[v.did] = v.player;
+  });
+  visits.forEach((v) => {
+    if (!v.name && didName[v.did]) v.name = didName[v.did];
+    if (!v.player && didPlayer[v.did]) v.player = didPlayer[v.did];
+  });
+
   const byDay = {};
   visits.forEach((v) => { (byDay[v.day] = byDay[v.day] || []).push(v); });
 

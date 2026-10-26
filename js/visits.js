@@ -372,6 +372,95 @@ P10.Visits = (function () {
   });
 
   /* ==================================================================
+     FIRST VISIT: WHO'S HERE
+     The Home card was easy to scroll past, so a first visit now opens a
+     short sign-in sheet: name, player, and how they are connected. It
+     appears once per phone, until a name is saved, and it does not offer a
+     skip - knowing who is on the app is the point of it. It never appears
+     on the Admin page.
+     ================================================================== */
+  function gateOpen() { return !!document.getElementById('whoGate'); }
+
+  function showGate() {
+    if (gateOpen() || ls(KEY_NAME)) return;
+    if ((location.hash || '') === '#admin') return;
+    var pr = profile();
+    var roster = C.roster.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var el = document.createElement('div');
+    el.id = 'whoGate';
+    el.className = 'who-gate';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'whoGateTitle');
+    el.innerHTML =
+      '<div class="who-sheet">' +
+        '<img class="who-mark" src="assets/mark-light.png" alt="">' +
+        '<h2 id="whoGateTitle" class="who-title">Welcome to Prospects Prime</h2>' +
+        '<p class="who-sub">Tell us who you are and who you are here for. One time only on this phone.</p>' +
+        '<div class="field"><label for="gateName">Your name</label>' +
+        '<input class="input" type="text" id="gateName" placeholder="First and last" autocomplete="name" maxlength="40" value="' + esc(pr.name) + '"></div>' +
+        '<div class="field mt-16"><label for="gatePlayer">Your player</label>' +
+        '<select class="input" id="gatePlayer">' +
+        '<option value="">Pick a player</option>' +
+        roster.map(function (r) { return '<option value="' + esc(r.name) + '"' + (r.name === pr.player ? ' selected' : '') + '>' + esc(r.name) + (r.num !== null && r.num !== undefined ? ' · #' + r.num : '') + '</option>'; }).join('') +
+        '<option value="__staff">I am a coach / staff</option>' +
+        '</select></div>' +
+        '<div class="field mt-16"><label>I am his</label>' +
+        '<div class="seg who-roles" id="gateRole">' + ROLES.map(function (r) {
+          return '<button type="button" class="seg-btn' + (r === (pr.role || 'Parent') ? ' active' : '') + '" data-role="' + r + '">' + r + '</button>';
+        }).join('') + '</div></div>' +
+        '<div id="gateMsg"></div>' +
+        '<button class="btn btn-primary btn-block mt-16" id="gateGo">Continue</button>' +
+        '<p class="who-fine">Stays on this phone. The site keeps a visit count with this name and nothing else - no email, no phone number.</p>' +
+      '</div>';
+    document.body.appendChild(el);
+    document.documentElement.classList.add('who-locked');
+    setTimeout(function () { var i = document.getElementById('gateName'); if (i && !i.value) i.focus(); }, 250);
+  }
+
+  function closeGate() {
+    var el = document.getElementById('whoGate');
+    if (el) el.remove();
+    document.documentElement.classList.remove('who-locked');
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!gateOpen()) return;
+    var role = e.target.closest('#gateRole .seg-btn');
+    if (role) {
+      document.querySelectorAll('#gateRole .seg-btn').forEach(function (b) { b.classList.toggle('active', b === role); });
+      return;
+    }
+    if (!e.target.closest('#gateGo')) return;
+    var name = ((document.getElementById('gateName') || {}).value || '').trim();
+    var player = (document.getElementById('gatePlayer') || {}).value || '';
+    var roleBtn = document.querySelector('#gateRole .seg-btn.active');
+    var msg = document.getElementById('gateMsg');
+    var bad = function (t, id) {
+      if (msg) msg.innerHTML = '<div class="msg msg-bad mt-16">' + t + '</div>';
+      var f = document.getElementById(id); if (f) f.focus();
+    };
+    if (name.length < 2) return bad('Put your name in first.', 'gateName');
+    if (!player) return bad('Pick your player, or "I am a coach / staff".', 'gatePlayer');
+    var staff = player === '__staff';
+    ls(KEY_NAME, name.slice(0, 40));
+    ls(KEY_ROLE, staff ? 'Coach' : (roleBtn ? roleBtn.dataset.role : 'Parent'));
+    if (P10.MyPlayer && !staff) P10.MyPlayer.set(player);
+    ping('name');
+    closeGate();
+    paintFooter();
+    var card = document.getElementById('whoCard'); if (card) card.remove();
+    if (P10.app && P10.app.renderAll) P10.app.renderAll();
+    if (P10.app && P10.app.toast) P10.app.toast('Thanks, ' + name.split(' ')[0] + '. You are all set.', 'good');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.id === 'gateName') { var s2 = document.getElementById('gatePlayer'); if (s2) s2.focus(); }
+  });
+  P10.Store.subscribe(function (st, reason) {
+    if (reason === 'init') setTimeout(showGate, 600);
+  });
+
+  /* ==================================================================
      THE ADMIN PAGE
      Reached from the small Admin link in the footer. It is not a tab, not
      part of either room, and nothing in coach mode leads to it. The code
