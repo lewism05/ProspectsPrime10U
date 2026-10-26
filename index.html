@@ -26,12 +26,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="css/base.css?v=20261027a">
-<link rel="stylesheet" href="css/layout.css?v=20261027a">
-<link rel="stylesheet" href="css/components.css?v=20261027a">
-<link rel="stylesheet" href="css/cards.css?v=20261027a">
-<link rel="stylesheet" href="css/season.css?v=20261027a">
-<link rel="stylesheet" href="css/uniforms.css?v=20261027a">
+<link rel="stylesheet" href="css/base.css?v=20261027b">
+<link rel="stylesheet" href="css/layout.css?v=20261027b">
+<link rel="stylesheet" href="css/components.css?v=20261027b">
+<link rel="stylesheet" href="css/cards.css?v=20261027b">
+<link rel="stylesheet" href="css/season.css?v=20261027b">
+<link rel="stylesheet" href="css/uniforms.css?v=20261027b">
 
 <script>
 /* Set the uniform before the first paint, so nobody sees a flash of the
@@ -68,7 +68,7 @@
           <span class="live-dot off" id="liveDot"></span>
           <span class="live-label" id="liveLabel">No data</span>
         </button>
-        <button class="icon-btn uni-btn" id="themeBtn" title="Switch uniform" aria-label="Switch uniform: Home, Away or Alt"><span data-u="home">Home</span><span data-u="away">Away</span><span data-u="alt">Alt</span></button>
+        <button class="icon-btn uni-btn" id="themeBtn" title="Switch uniform" aria-label="Switch uniform: Home, Away or Alt"><span class="uni-sw" aria-hidden="true"><i class="sw-home"></i><i class="sw-away"></i><i class="sw-alt"></i></span><span data-u="home">Home</span><span data-u="away">Away</span><span data-u="alt">Alt</span></button>
         <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
           <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
@@ -104,6 +104,14 @@
       <button class="navtab" data-tab="development" data-room="corner">Practice</button>
       <button class="navtab" data-tab="lineup" data-room="corner">Lineup</button>
       <button class="navtab" data-tab="manage" data-room="corner">Manage</button>
+    </div>
+    <div class="wrap uni-menu" id="uniMenu">
+      <span class="uni-menu-label">Uniform</span>
+      <div class="uni-seg" role="group" aria-label="Uniform">
+        <button type="button" data-u="home"><i class="sw-home" aria-hidden="true"></i>Home</button>
+        <button type="button" data-u="away"><i class="sw-away" aria-hidden="true"></i>Away</button>
+        <button type="button" data-u="alt"><i class="sw-alt" aria-hidden="true"></i>Alt</button>
+      </div>
     </div>
   </nav>
 
@@ -268,24 +276,24 @@
 </div>
 
 <!-- Chart.js is vendored locally so the site works with no CDN dependency. -->
-<script src="vendor/chart.umd.min.js?v=20261027a"></script>
-<script src="js/config.js?v=20261027a"></script>
-<script src="js/csv.js?v=20261027a"></script>
-<script src="js/stats.js?v=20261027a"></script>
-<script src="js/store.js?v=20261027a"></script>
-<script src="js/drills.js?v=20261027a"></script>
-<script src="js/insights.js?v=20261027a"></script>
-<script src="js/lineup.js?v=20261027a"></script>
-<script src="js/schedule.js?v=20261027a"></script>
-<script src="js/gamelog.js?v=20261027a"></script>
-<script src="js/progress.js?v=20261027a"></script>
-<script src="js/charts.js?v=20261027a"></script>
-<script src="js/views.js?v=20261027a"></script>
-<script src="js/season.js?v=20261027a"></script>
-<script src="js/matchup.js?v=20261027a"></script>
-<script src="js/myplayer.js?v=20261027a"></script>
-<script src="js/cards.js?v=20261027a"></script>
-<script src="js/visits.js?v=20261027a"></script>
-<script src="js/app.js?v=20261027a"></script>
+<script src="vendor/chart.umd.min.js?v=20261027b"></script>
+<script src="js/config.js?v=20261027b"></script>
+<script src="js/csv.js?v=20261027b"></script>
+<script src="js/stats.js?v=20261027b"></script>
+<script src="js/store.js?v=20261027b"></script>
+<script src="js/drills.js?v=20261027b"></script>
+<script src="js/insights.js?v=20261027b"></script>
+<script src="js/lineup.js?v=20261027b"></script>
+<script src="js/schedule.js?v=20261027b"></script>
+<script src="js/gamelog.js?v=20261027b"></script>
+<script src="js/progress.js?v=20261027b"></script>
+<script src="js/charts.js?v=20261027b"></script>
+<script src="js/views.js?v=20261027b"></script>
+<script src="js/season.js?v=20261027b"></script>
+<script src="js/matchup.js?v=20261027b"></script>
+<script src="js/myplayer.js?v=20261027b"></script>
+<script src="js/cards.js?v=20261027b"></script>
+<script src="js/visits.js?v=20261027b"></script>
+<script src="js/app.js?v=20261027b"></script>
 </body>
 </html>

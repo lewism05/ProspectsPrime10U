@@ -229,6 +229,15 @@
       applyTheme(u);
     });
   }
+  // The Uniform row in the phone menu: pick one, the menu stays open so
+  // the change is visible right away.
+  var uniMenu = $('uniMenu');
+  if (uniMenu) {
+    uniMenu.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-u]') : null;
+      if (b) applyTheme(b.getAttribute('data-u'));
+    });
+  }
 
   /* ==================================================================
      NAV
