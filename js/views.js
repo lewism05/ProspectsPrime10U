@@ -585,8 +585,9 @@ P10.Views = (function () {
           '<div class="pcard-role">' + esc(p.role) + '</div>' +
         '</div>' +
       '</div>' +
-      (ach.length || p.hasData ? '<div class="pcard-flags">' +
-        (p.hasData && b.ops > 0 ? '<span class="tier-badge tier-' + p.tier + '">' + S.tierName(p.tier) + '</span>' : '') +
+      /* No Core / Support / Develop label here: every family sees every
+         card. Only the earned badges show. */
+      (ach.length ? '<div class="pcard-flags">' +
         ach.map(function (a) { return '<span class="badge">' + esc(a.label) + '</span>'; }).join('') +
         '</div>' : '') +
       '<div class="pcard-stats">' +
@@ -1373,7 +1374,7 @@ P10.Views = (function () {
 
     $('drawerNum').textContent = p.num !== null && p.num !== undefined ? p.num : '–';
     $('drawerName').textContent = p.name;
-    $('drawerRole').textContent = p.role + (p.hasData && p.bat && p.bat.ops > 0 ? ' · ' + S.tierName(p.tier) : '');
+    $('drawerRole').textContent = p.role;
 
     var html = '';
 
@@ -1418,7 +1419,9 @@ P10.Views = (function () {
       [['OPS', 'ops'], ['OBP', 'obp'], ['SLG', 'slg'], ['Contact', 'kRate']].forEach(function (m) {
         if (p.pct[m[1]]) meters.push({ label: m[0], pct: p.pct[m[1]], rank: p.rank[m[1]], of: p.rankOf[m[1]] });
       });
-      if (meters.length) {
+      /* Ranking a kid against his teammates is a coach conversation, not
+         something every family should see on every player. */
+      if (meters.length && st.coach) {
         html += '<div class="mt-16"><div class="eyebrow mb-8">Team Rank</div>' +
           meters.map(function (m) {
             var cls = m.pct >= 70 ? 'good' : m.pct >= 40 ? '' : 'warn';
@@ -1480,8 +1483,8 @@ P10.Views = (function () {
         }).join('') + '</div>';
     }
 
-    /* ---- Issues + drills ---- */
-    var issues = I.playerIssues(p);
+    /* ---- Issues + drills (coach only, same as My Player) ---- */
+    var issues = st.coach ? I.playerIssues(p) : [];
     if (issues.length) {
       html += '<div class="dsec"><div class="dsec-h">Work On This</div>' +
         issues.map(function (is) {

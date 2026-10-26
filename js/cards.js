@@ -214,9 +214,8 @@ P10.Cards = (function () {
     var num = (p.num !== null && p.num !== undefined) ? p.num : '';
     var nm = splitName(p.name);
     var pos = p.position || (p.isPitcher ? 'P' : '');
-    var tierChip = (p.hasData && p.bat && p.bat.ops > 0)
-      ? '<span class="bbf-chip t' + p.tier + '">' + esc(S.tierName(p.tier)) + '</span>'
-      : '';
+    /* The card is public, so it carries no Core / Support / Develop label. */
+    var tierChip = '';
 
     return '' +
       '<div class="bbface bbfront">' +
@@ -363,7 +362,6 @@ P10.Cards = (function () {
       vitals.push(['Pos', p.secondary ? p.position + '/' + p.secondary : p.position]);
     }
     if (p.num !== null && p.num !== undefined) vitals.push(['No.', '#' + p.num]);
-    if (p.hasData && p.bat && p.bat.ops > 0) vitals.push(['Tier', S.tierName(p.tier)]);
     var games = (b && b.gp) || 0;
     if (games) vitals.push(['Games', games]);
     if (pit && pit.ip > 0) vitals.push(['IP', S.ipText(pit.ip)]);
