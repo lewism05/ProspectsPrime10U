@@ -1,0 +1,8 @@
+{
+  "name": "prospects-prime-10u",
+  "private": true,
+  "description": "Static team site. The only dependency is for the visit log function (netlify/functions/visit.js).",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.6"
+  }
+}

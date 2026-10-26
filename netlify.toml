@@ -43,8 +43,10 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
-# Serverless function that lets families add a player photo everyone can see.
-# Plain JS, no dependencies, no build step.
+# Serverless functions: player photos, publishing stats, and the visit log.
+# The visit log uses Netlify Blobs through @netlify/blobs (package.json), so
+# functions are bundled with esbuild; the other two have no dependencies and
+# bundle the same way.
 [functions]
   directory = "netlify/functions"
-  node_bundler = "none"
+  node_bundler = "esbuild"

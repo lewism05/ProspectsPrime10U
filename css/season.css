@@ -165,3 +165,7 @@ table.stat.posgrid { min-width: 0; }
 .sl i { font-style: normal; font-family: var(--f-display); font-size: 10px; letter-spacing: .12em; color: var(--text-3); }
 
 .grid.g-top { align-items: start; }
+
+/* ---- site traffic (admin) ---- */
+.visits-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 720px) { .visits-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
